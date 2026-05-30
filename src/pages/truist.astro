@@ -1,0 +1,46 @@
+---
+import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
+import PatternCard from '../components/PatternCard.astro';
+import QuestionCard from '../components/QuestionCard.astro';
+import GamePlanPanel from '../components/GamePlanPanel.astro';
+import { truistConfig, truistJavaSqlPatterns, truistBankingPatterns, truistQuestions, truistGamePlan } from '../data/truist';
+---
+
+<CheatsheetLayout
+  title="Truist Technical Interview — Cheat Sheet"
+  subtitle="Recruiter Screen → Technical Interview(s) · Java, SQL, Banking Domain Focus"
+  accentColor="#532E8A"
+  tabs={truistConfig.tabs}
+  timerMinutes={60}
+  hasSearch={true}
+>
+  <div id="panel-java-sql" class="panel active" role="tabpanel" aria-labelledby="tab-java-sql">
+    {truistJavaSqlPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-banking" class="panel" role="tabpanel" aria-labelledby="tab-banking">
+    {truistBankingPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-questions" class="panel" role="tabpanel" aria-labelledby="tab-questions">
+    {truistQuestions.map(q => <QuestionCard {...q} />)}
+  </div>
+
+  <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
+    <GamePlanPanel {...truistGamePlan} />
+  </div>
+</CheatsheetLayout>

@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+import type { TabConfig } from '../data/types';
+import TabNavigation from '../components/TabNavigation.astro';
+import Timer from '../components/Timer.tsx';
+import SearchFilter from '../components/SearchFilter.tsx';
+
+interface Props {
+  title: string;
+  subtitle: string;
+  accentColor: string;
+  accentSecondary?: string;
+  tabs: TabConfig[];
+  timerMinutes?: number;
+  hasSearch?: boolean;
+}
+
+const {
+  title,
+  subtitle,
+  accentColor,
+  accentSecondary,
+  tabs,
+  timerMinutes,
+  hasSearch,
+} = Astro.props;
+
+const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${accentSecondary || accentColor};`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body style={bodyStyle}>
+    <div class="root">
+      <nav class="breadcrumb">
+        <a href="/" class="back-link">← All Cheatsheets</a>
+      </nav>
+
+      <header class="header">
+        <div class="header-left">
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
+        <div class="header-right">
+          {timerMinutes && (
+            <Timer client:load durationMinutes={timerMinutes} />
+          )}
+        </div>
+      </header>
+
+      {hasSearch && (
+        <SearchFilter
+          client:load
+          targetSelector=".question-card, .qa-card"
+          searchFields={['data-name', 'data-hint']}
+          scope={timerMinutes ? 'active-panel' : 'all-panels'}
+        />
+      )}
+
+      <TabNavigation tabs={tabs} />
+
+      <slot />
+    </div>
+  </body>
+</html>

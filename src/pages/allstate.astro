@@ -1,0 +1,47 @@
+---
+import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
+import PatternCard from '../components/PatternCard.astro';
+import QuestionCard from '../components/QuestionCard.astro';
+import GamePlanPanel from '../components/GamePlanPanel.astro';
+import { allstateConfig, allstateTddPatterns, allstateJavaPatterns, allstateQuestions, allstateGamePlan } from '../data/allstate';
+---
+
+<CheatsheetLayout
+  title={allstateConfig.title}
+  subtitle="Recruiter Screen → Technical Coding → Pair Programming/TDD Round"
+  accentColor={allstateConfig.accentColor}
+  accentSecondary={allstateConfig.accentSecondary}
+  tabs={allstateConfig.tabs}
+  timerMinutes={allstateConfig.timerMinutes}
+  hasSearch={true}
+>
+  <div id="panel-tdd" class="panel active" role="tabpanel" aria-labelledby="tab-tdd">
+    {allstateTddPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-java" class="panel" role="tabpanel" aria-labelledby="tab-java">
+    {allstateJavaPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-questions" class="panel" role="tabpanel" aria-labelledby="tab-questions">
+    {allstateQuestions.map(q => <QuestionCard {...q} />)}
+  </div>
+
+  <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
+    <GamePlanPanel {...allstateGamePlan} />
+  </div>
+</CheatsheetLayout>

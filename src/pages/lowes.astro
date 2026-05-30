@@ -1,0 +1,46 @@
+---
+import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
+import PatternCard from '../components/PatternCard.astro';
+import QuestionCard from '../components/QuestionCard.astro';
+import GamePlanPanel from '../components/GamePlanPanel.astro';
+import { lowesConfig, lowesJavaPatterns, lowesMicroPatterns, lowesQuestions, lowesGamePlan } from '../data/lowes';
+---
+
+<CheatsheetLayout
+  title="Lowe's Technical Interview — Cheat Sheet"
+  subtitle="Recruiter Call → 3 Technical Panel Interviews · All Technical, No Behavioral"
+  accentColor="#004990"
+  tabs={lowesConfig.tabs}
+  timerMinutes={90}
+  hasSearch={true}
+>
+  <div id="panel-java" class="panel active" role="tabpanel" aria-labelledby="tab-java">
+    {lowesJavaPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-micro" class="panel" role="tabpanel" aria-labelledby="tab-micro">
+    {lowesMicroPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-questions" class="panel" role="tabpanel" aria-labelledby="tab-questions">
+    {lowesQuestions.map(q => <QuestionCard {...q} />)}
+  </div>
+
+  <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
+    <GamePlanPanel {...lowesGamePlan} />
+  </div>
+</CheatsheetLayout>

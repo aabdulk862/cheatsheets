@@ -1,0 +1,26 @@
+---
+/**
+ * PatternCard.astro — Renders a code pattern card with build-time
+ * Shiki syntax highlighting, language badge, description, and meta tags.
+ */
+import { Code } from 'astro:components';
+import type { PatternCard } from '../data/types';
+
+interface Props extends PatternCard {}
+
+const { title, lang, description, code, metaTags } = Astro.props;
+---
+
+<div class="pattern-card">
+  <div class="card-title">
+    {title}
+    <span class={`badge badge-${lang}`}>{lang}</span>
+  </div>
+  <div class="card-desc">{description}</div>
+  <Code code={code} lang={lang} theme="github-dark" />
+  <div class="meta">
+    {metaTags.map((tag) => (
+      <span class="meta-item">{tag}</span>
+    ))}
+  </div>
+</div>

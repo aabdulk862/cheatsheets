@@ -1,0 +1,52 @@
+---
+import type { TimeAllocation, StrategyCard } from '../data/types';
+
+interface Props {
+  allocations: TimeAllocation[];
+  strategies: StrategyCard[];
+  keywords: string[];
+}
+
+const { allocations, strategies, keywords } = Astro.props;
+---
+
+<div class="game-plan-panel">
+  <!-- Time Allocation -->
+  <div class="section-label">Time Allocation</div>
+  <div class="plan-grid">
+    {allocations.map((alloc) => (
+      <div class:list={['plan-card', { highlight: alloc.highlight }]}>
+        <div class="plan-q">{alloc.label}</div>
+        <div class="plan-type">{alloc.type}</div>
+        <div class="plan-time">{alloc.minutes}</div>
+        <div class="plan-unit">min</div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Strategy -->
+  <div class="section-label">Strategy</div>
+  <div class="strategy-grid">
+    {strategies.map((strategy) => (
+      <div class="strategy-card">
+        <h3>{strategy.title}</h3>
+        <ol>
+          {strategy.steps.map((step) => (
+            <li>{step}</li>
+          ))}
+        </ol>
+        {strategy.highlightText && (
+          <span class="highlight-text">{strategy.highlightText}</span>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <!-- Keywords -->
+  <div class="section-label">Key Topics</div>
+  <div class="keyword-grid">
+    {keywords.map((keyword) => (
+      <span class="kw">{keyword}</span>
+    ))}
+  </div>
+</div>

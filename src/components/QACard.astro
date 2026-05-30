@@ -1,0 +1,47 @@
+---
+/**
+ * QACard.astro — Renders an expandable Q&A accordion card for the Infosys
+ * Playbook page. Shows question as a clickable header; answer content
+ * (pre-rendered HTML) expands/collapses on click with smooth max-height animation.
+ * Includes data-question attribute for SearchFilter island to filter by substring match.
+ */
+
+interface Props {
+  question: string;
+  answer: string; // HTML content (pre-rendered markdown)
+}
+
+const { question, answer } = Astro.props;
+---
+
+<div class="qa-card" data-question={question.toLowerCase()}>
+  <div class="qa-card-header">
+    <h3>{question}</h3>
+    <span class="chevron">▾</span>
+  </div>
+  <div class="qa-body">
+    <Fragment set:html={answer} />
+  </div>
+</div>
+
+<script>
+  function initQACards() {
+    const headers = document.querySelectorAll('.qa-card-header');
+    headers.forEach((header) => {
+      header.addEventListener('click', () => {
+        const card = header.parentElement as HTMLElement;
+        const body = card.querySelector('.qa-body') as HTMLElement;
+        card.classList.toggle('expanded');
+        if (card.classList.contains('expanded')) {
+          body.style.maxHeight = body.scrollHeight + 'px';
+        } else {
+          body.style.maxHeight = '0';
+        }
+      });
+    });
+  }
+
+  // Run on initial load and after Astro page transitions
+  initQACards();
+  document.addEventListener('astro:after-swap', initQACards);
+</script>

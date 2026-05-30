@@ -1,0 +1,47 @@
+---
+import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
+import PatternCard from '../components/PatternCard.astro';
+import QuestionCard from '../components/QuestionCard.astro';
+import GamePlanPanel from '../components/GamePlanPanel.astro';
+import { shutterflyConfig, shutterflyArrayPatterns, shutterflyDpPatterns, shutterflyQuestions, shutterflyGamePlan } from '../data/shutterfly';
+---
+
+<CheatsheetLayout
+  title="Shutterfly Coding Assessment — Cheat Sheet"
+  subtitle="39 Known Problems — 5 Easy, 25 Medium, 9 Hard · Top Topics: Array, Hash Table, DP, String, Math"
+  accentColor="#6B2D8B"
+  accentSecondary="#00B2A9"
+  tabs={shutterflyConfig.tabs}
+  timerMinutes={90}
+  hasSearch={true}
+>
+  <div id="panel-arrays" class="panel active" role="tabpanel" aria-labelledby="tab-arrays">
+    {shutterflyArrayPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-dp" class="panel" role="tabpanel" aria-labelledby="tab-dp">
+    {shutterflyDpPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-questions" class="panel" role="tabpanel" aria-labelledby="tab-questions">
+    {shutterflyQuestions.map(q => <QuestionCard {...q} />)}
+  </div>
+
+  <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
+    <GamePlanPanel {...shutterflyGamePlan} />
+  </div>
+</CheatsheetLayout>

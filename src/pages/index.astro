@@ -1,0 +1,179 @@
+---
+import '../styles/global.css';
+
+const companies = [
+  {
+    name: 'Bank of America',
+    href: '/bofa',
+    accent: '#012169',
+    description: 'HireVue OA — 90 min',
+    detail: 'Self-Intro + 2 Coding + Explanation Video + Fitment',
+  },
+  {
+    name: 'Allstate',
+    href: '/allstate',
+    accent: '#003DA5',
+    description: 'TDD & Pair Programming — 60 min',
+    detail: 'Recruiter Screen → Technical Coding → Pair Programming/TDD Round',
+  },
+  {
+    name: 'Shutterfly',
+    href: '/shutterfly',
+    accent: '#6B2D8B',
+    description: '39 Known Problems — 90 min',
+    detail: '5 Easy, 25 Medium, 9 Hard · Array, Hash Table, DP, String, Math',
+  },
+  {
+    name: "Lowe's",
+    href: '/lowes',
+    accent: '#004990',
+    description: '3 Technical Panels — 90 min',
+    detail: 'Java 8, Microservices/Kafka, Database · All Technical, No Behavioral',
+  },
+  {
+    name: 'Truist',
+    href: '/truist',
+    accent: '#532E8A',
+    description: 'Banking Domain Focus — 60 min',
+    detail: 'Java, SQL, Banking Domain · Recruiter Screen → Technical Interview(s)',
+  },
+  {
+    name: 'Infosys',
+    href: '/infosys',
+    accent: '#007CC3',
+    description: 'Full-Stack Knowledge Base',
+    detail: 'Java · Spring · SQL · React · HTTP · Cloud · Coding · Git',
+  },
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Company Cheatsheets</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body>
+    <div class="root landing">
+      <header class="landing-header">
+        <h1>Interview Cheatsheets</h1>
+        <p>Company-specific interview preparation guides</p>
+      </header>
+
+      <div class="company-grid">
+        {companies.map((company) => (
+          <a href={company.href} class="company-card" style={`--card-accent: ${company.accent};`}>
+            <div class="company-card-accent" />
+            <div class="company-card-body">
+              <h2>{company.name}</h2>
+              <p class="company-desc">{company.description}</p>
+              <p class="company-detail">{company.detail}</p>
+            </div>
+            <div class="company-card-arrow">→</div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <style>
+      .landing-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        padding-top: 1rem;
+      }
+
+      .landing-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 6px;
+      }
+
+      .landing-header p {
+        font-size: 14px;
+        color: var(--color-text-secondary);
+      }
+
+      .company-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 16px;
+      }
+
+      .company-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg);
+        padding: 1.25rem 1.5rem;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+      }
+
+      .company-card:hover {
+        border-color: var(--card-accent);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        transform: translateY(-2px);
+      }
+
+      .company-card-accent {
+        width: 4px;
+        height: 48px;
+        border-radius: 2px;
+        background: var(--card-accent);
+        flex-shrink: 0;
+      }
+
+      .company-card-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .company-card-body h2 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 4px;
+      }
+
+      .company-desc {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--card-accent);
+        margin-bottom: 2px;
+      }
+
+      .company-detail {
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+        line-height: 1.4;
+      }
+
+      .company-card-arrow {
+        font-size: 18px;
+        color: var(--color-text-tertiary);
+        transition: color 0.15s, transform 0.15s;
+        flex-shrink: 0;
+      }
+
+      .company-card:hover .company-card-arrow {
+        color: var(--card-accent);
+        transform: translateX(3px);
+      }
+
+      @media (max-width: 768px) {
+        .company-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </body>
+</html>

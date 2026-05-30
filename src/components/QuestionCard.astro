@@ -1,0 +1,30 @@
+---
+/**
+ * QuestionCard.astro — Renders a filterable question card with
+ * difficulty badge, hint text, and Shiki syntax-highlighted solution code.
+ * Includes data attributes for SearchFilter island to filter by substring match.
+ */
+import { Code } from 'astro:components';
+import type { QuestionItem } from '../data/types';
+
+interface Props extends QuestionItem {}
+
+const { name, diff, hint, lang, code } = Astro.props;
+
+const diffLabel = diff.charAt(0).toUpperCase() + diff.slice(1);
+---
+
+<div
+  class="question-card"
+  data-name={name.toLowerCase()}
+  data-hint={hint.toLowerCase()}
+>
+  <div class="question-card-header">
+    <span class="q-name">{name}</span>
+    <span class={`badge badge-${diff}`}>{diffLabel}</span>
+    <span class="q-hint">{hint}</span>
+  </div>
+  <div class="question-card-body">
+    <Code code={code} lang={lang as any} theme="github-dark" />
+  </div>
+</div>

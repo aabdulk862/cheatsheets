@@ -1,0 +1,128 @@
+---
+import '../styles/global.css';
+import type { TabConfig } from '../data/types';
+import TabNavigation from '../components/TabNavigation.astro';
+import SearchFilter from '../components/SearchFilter.tsx';
+import QACard from '../components/QACard.astro';
+import { getCollection, render } from 'astro:content';
+
+const topics = await getCollection('infosys');
+const sorted = topics.sort((a, b) => a.data.order - b.data.order);
+
+const tabs: TabConfig[] = sorted.map(t => ({ id: t.id, label: t.data.title }));
+
+/**
+ * Parse rendered HTML content into Q&A sections by splitting on H1 headings.
+ * Each H1 becomes the question, and everything between that H1 and the next H1
+ * (or end of content) becomes the answer body.
+ */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#x26;/g, '&')
+    .replace(/&#38;/g, '&')
+    .replace(/&amp;/g, '&')
+    .replace(/&#x3C;/g, '<')
+    .replace(/&lt;/g, '<')
+    .replace(/&#x3E;/g, '>')
+    .replace(/&gt;/g, '>')
+    .replace(/&#x22;/g, '"')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+function parseQASections(html: string): { question: string; answer: string }[] {
+  const sections: { question: string; answer: string }[] = [];
+
+  const h1Regex = /<h1[^>]*>(.*?)<\/h1>/gi;
+  const matches = [...html.matchAll(h1Regex)];
+
+  if (matches.length === 0) return sections;
+
+  for (let i = 0; i < matches.length; i++) {
+    const rawQuestion = matches[i][1].replace(/<[^>]+>/g, '').trim();
+    const question = decodeHtmlEntities(rawQuestion);
+    const startIdx = matches[i].index! + matches[i][0].length;
+    const endIdx = i + 1 < matches.length ? matches[i + 1].index! : html.length;
+    const answer = html.slice(startIdx, endIdx).trim();
+    if (question) {
+      sections.push({ question, answer });
+    }
+  }
+
+  return sections;
+}
+
+// Pre-render all topics and extract their HTML sections
+const topicData = await Promise.all(
+  sorted.map(async (entry) => {
+    await render(entry);
+    const rawHtml = entry.rendered?.html || '';
+    const sections = parseQASections(rawHtml);
+    return {
+      id: entry.id,
+      title: entry.data.title,
+      sections,
+    };
+  })
+);
+
+const title = "Infosys Playbook — Full-Stack Interview Knowledge Base";
+const subtitle = "Java · Spring · SQL · React · HTTP · Cloud · Coding · Git";
+const accentColor = "#007CC3";
+const accentSecondary = "#00A5E3";
+const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${accentSecondary};`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
+  </head>
+  <body style={bodyStyle}>
+    <div class="root">
+      <nav class="breadcrumb">
+        <a href="/" class="back-link">← All Cheatsheets</a>
+      </nav>
+
+      <header class="header">
+        <div class="header-left">
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
+        <div class="header-right">
+          <!-- No Timer for Infosys page -->
+        </div>
+      </header>
+
+      <SearchFilter
+        client:load
+        targetSelector=".question-card, .qa-card"
+        searchFields={['data-name', 'data-hint', 'data-question']}
+        scope="all-panels"
+      />
+
+      <TabNavigation tabs={tabs} />
+
+      {topicData.map((topic, index) => (
+        <div
+          id={`panel-${topic.id}`}
+          class={index === 0 ? 'panel active' : 'panel'}
+          role="tabpanel"
+          aria-labelledby={`tab-${topic.id}`}
+        >
+          {topic.sections.map(({ question, answer }) => (
+            <QACard question={question} answer={answer} />
+          ))}
+        </div>
+      ))}
+    </div>
+  </body>
+</html>

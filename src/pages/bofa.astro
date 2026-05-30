@@ -1,0 +1,47 @@
+---
+import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
+import PatternCard from '../components/PatternCard.astro';
+import QuestionCard from '../components/QuestionCard.astro';
+import GamePlanPanel from '../components/GamePlanPanel.astro';
+import { bofaConfig, bofaSqlPatterns, bofaJavaPatterns, bofaQuestions, bofaGamePlan } from '../data/bofa';
+---
+
+<CheatsheetLayout
+  title="Bank of America HireVue OA — Cheat Sheet"
+  subtitle="HireVue OA — 90 min · Self-Intro + 2 Coding (Easy + Medium) + Explanation Video + Fitment"
+  accentColor="#012169"
+  accentSecondary="#E31837"
+  tabs={bofaConfig.tabs}
+  timerMinutes={90}
+  hasSearch={true}
+>
+  <div id="panel-sql" class="panel active" role="tabpanel" aria-labelledby="tab-sql">
+    {bofaSqlPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-java" class="panel" role="tabpanel" aria-labelledby="tab-java">
+    {bofaJavaPatterns.map(section => (
+      <Fragment>
+        <div class="section-label">{section.label}</div>
+        <div class="pattern-grid">
+          {section.cards.map(card => <PatternCard {...card} />)}
+        </div>
+      </Fragment>
+    ))}
+  </div>
+
+  <div id="panel-questions" class="panel" role="tabpanel" aria-labelledby="tab-questions">
+    {bofaQuestions.map(q => <QuestionCard {...q} />)}
+  </div>
+
+  <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
+    <GamePlanPanel {...bofaGamePlan} />
+  </div>
+</CheatsheetLayout>
