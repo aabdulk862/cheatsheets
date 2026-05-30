@@ -457,19 +457,17 @@ private int expand(String s, int l, int r) {
         title: 'Kth Factor of N',
         lang: 'java',
         description:
-          'Iterate from 1 to sqrt(n) collecting factors. If k-th not found in first half, compute from second half.',
+          'Collect all factor pairs up to sqrt(n), sort, and return the k-th.',
         code: `public int kthFactor(int n, int k) {
     List<Integer> factors = new ArrayList<>();
     for (int i = 1; i * i <= n; i++) {
-        if (n % i == 0) factors.add(i);
+        if (n % i == 0) {
+            factors.add(i);
+            if (i != n / i) factors.add(n / i);
+        }
     }
-    int size = factors.size();
-    // Check if sqrt(n) is a perfect square (avoid duplicate)
-    if (factors.get(size - 1) * factors.get(size - 1) == n) size--;
-    int total = 2 * size - (factors.get(factors.size() - 1) * factors.get(factors.size() - 1) == n ? 1 : 0);
-    if (k > total) return -1;
-    if (k <= factors.size()) return factors.get(k - 1);
-    return n / factors.get(total - k);
+    Collections.sort(factors);
+    return k <= factors.size() ? factors.get(k - 1) : -1;
 }`,
         metaTags: ['math', 'factors', 'O(√n)'],
       },
@@ -780,7 +778,8 @@ export const shutterflyGamePlan: GamePlanConfig = {
   allocations: [
     { label: 'Easy (5)', type: 'Easy Problems', minutes: 10, highlight: false },
     { label: 'Medium (25)', type: 'Medium Problems', minutes: 50, highlight: true },
-    { label: 'Hard (9)', type: 'Hard Problems', minutes: 30, highlight: true },
+    { label: 'Hard (9)', type: 'Hard Problems', minutes: 27, highlight: true },
+    { label: 'Review', type: 'Review & Edge Cases', minutes: 3, highlight: false },
   ],
   strategies: [
     {

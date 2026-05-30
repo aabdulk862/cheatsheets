@@ -83,8 +83,10 @@ export default function Timer({ durationMinutes }: TimerProps) {
 
   return (
     <>
-      <span className={displayClass}>{formatTime(timeLeft)}</span>
-      <button className="timer-btn" onClick={handleClick}>
+      <span className={displayClass} aria-live="polite" aria-atomic="true">
+        {formatTime(timeLeft)}
+      </span>
+      <button className="timer-btn" onClick={handleClick} aria-label={`Timer: ${getButtonLabel()}`}>
         {getButtonLabel()}
       </button>
     </>

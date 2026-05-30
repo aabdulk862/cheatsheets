@@ -51,6 +51,26 @@ export default function SearchFilter({
         }
       }
 
+      // For all-panels scope with a query, show all panels so matches are visible
+      if (scope === 'all-panels' && value) {
+        const allPanels = document.querySelectorAll<HTMLElement>('.panel');
+        allPanels.forEach((panel) => {
+          panel.classList.add('active');
+        });
+      } else if (scope === 'all-panels' && !value) {
+        // Restore: only first panel active (or whichever tab is selected)
+        const allPanels = document.querySelectorAll<HTMLElement>('.panel');
+        const activeTab = document.querySelector('[role="tab"][aria-selected="true"]');
+        const activeId = activeTab?.getAttribute('aria-controls');
+        allPanels.forEach((panel) => {
+          if (panel.id === activeId) {
+            panel.classList.add('active');
+          } else {
+            panel.classList.remove('active');
+          }
+        });
+      }
+
       // Get all cards matching the target selector within the scope
       const cards = container.querySelectorAll<HTMLElement>(targetSelector);
 
@@ -81,6 +101,20 @@ export default function SearchFilter({
           card.style.display = 'none';
         }
       });
+
+      // For all-panels: hide panels that have zero visible cards
+      if (scope === 'all-panels' && value) {
+        const allPanels = document.querySelectorAll<HTMLElement>('.panel');
+        allPanels.forEach((panel) => {
+          const visibleCards = panel.querySelectorAll<HTMLElement>(targetSelector);
+          const hasVisible = Array.from(visibleCards).some(
+            (card) => card.style.display !== 'none'
+          );
+          if (!hasVisible) {
+            panel.classList.remove('active');
+          }
+        });
+      }
 
       setNoResults(value.length > 0 && visibleCount === 0);
     },

@@ -155,8 +155,9 @@ export const bofaJavaPatterns: PatternSection[] = [
         title: 'Second Largest Element',
         lang: 'java',
         description:
-          'Single-pass algorithm tracking the two largest values in an array.',
+          'Single-pass algorithm tracking the two largest values. Returns -1 if no distinct second largest exists.',
         code: `public int secondLargest(int[] arr) {
+    if (arr.length < 2) return -1;
     int first = Integer.MIN_VALUE;
     int second = Integer.MIN_VALUE;
     for (int num : arr) {
@@ -167,7 +168,7 @@ export const bofaJavaPatterns: PatternSection[] = [
             second = num;
         }
     }
-    return second;
+    return second == Integer.MIN_VALUE ? -1 : second;
 }`,
         metaTags: ['arrays', 'single-pass', 'tracking', 'O(n)'],
       },
@@ -451,6 +452,7 @@ export const bofaQuestions: QuestionItem[] = [
     hint: 'Track first and second largest in a single pass',
     lang: 'java',
     code: `public int secondLargest(int[] arr) {
+    if (arr.length < 2) return -1;
     int first = Integer.MIN_VALUE;
     int second = Integer.MIN_VALUE;
     for (int num : arr) {
@@ -461,7 +463,7 @@ export const bofaQuestions: QuestionItem[] = [
             second = num;
         }
     }
-    return second;
+    return second == Integer.MIN_VALUE ? -1 : second;
 }`,
   },
   {
