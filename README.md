@@ -8,10 +8,12 @@ A collection of 6 company-specific interview preparation cheatsheets built with 
 |---------|-------|--------|-------|
 | Bank of America | `/bofa` | HireVue OA — Self-Intro + 2 Coding + Explanation Video + Fitment | 90 min |
 | Allstate | `/allstate` | Recruiter Screen → Technical Coding → Pair Programming/TDD Round | 60 min |
-| Shutterfly | `/shutterfly` | 39 Known Problems — 5 Easy, 25 Medium, 9 Hard | 90 min |
+| Shutterfly | `/shutterfly` | Phone Screen → 2 Technical (Java + Architecture) → Managerial | 60 min |
+| Chmura | `/chmura` | Phone → Skills Test → Panel (Angular/TypeScript/RxJS/Signals) | 60 min |
 | Lowe's | `/lowes` | 3 Technical Panels — Java 8, Microservices/Kafka, Database | 90 min |
 | Truist | `/truist` | Java, SQL, Banking Domain Focus | 60 min |
 | Infosys | `/infosys` | Full-Stack Knowledge Base (no timer) | — |
+| Wells Fargo | `/wellsfargo` | Phone → HackerRank → 2-3 Technical → Behavioral Panel | 60 min |
 
 ## Tech Stack
 
@@ -56,15 +58,19 @@ src/
 │   ├── bofa.astro
 │   ├── allstate.astro
 │   ├── shutterfly.astro
+│   ├── chmura.astro
 │   ├── lowes.astro
 │   ├── truist.astro
+│   ├── wellsfargo.astro
 │   └── infosys.astro
 ├── data/
 │   ├── types.ts                  # Shared TypeScript interfaces
 │   ├── bofa.ts
 │   ├── allstate.ts
 │   ├── shutterfly.ts
+│   ├── chmura.ts
 │   ├── lowes.ts
+│   ├── wellsfargo.ts
 │   └── truist.ts
 ├── content/
 │   └── infosys/                  # Markdown content collection (8 topics)

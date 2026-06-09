@@ -3,20 +3,20 @@ import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
 import PatternCard from '../components/PatternCard.astro';
 import QuestionCard from '../components/QuestionCard.astro';
 import GamePlanPanel from '../components/GamePlanPanel.astro';
-import { shutterflyConfig, shutterflyBackendPatterns, shutterflyCloudPatterns, shutterflyCodePatterns, shutterflyQuestions, shutterflyGamePlan } from '../data/shutterfly';
+import { chmuraConfig, chmuraAngularPatterns, chmuraRxjsPatterns, chmuraUiPatterns, chmuraQuestions, chmuraGamePlan } from '../data/chmura';
 ---
 
 <CheatsheetLayout
-  title={shutterflyConfig.title}
-  subtitle={shutterflyConfig.subtitle}
-  accentColor={shutterflyConfig.accentColor}
-  accentSecondary={shutterflyConfig.accentSecondary}
-  tabs={shutterflyConfig.tabs}
-  timerMinutes={shutterflyConfig.timerMinutes}
+  title={chmuraConfig.title}
+  subtitle={chmuraConfig.subtitle}
+  accentColor={chmuraConfig.accentColor}
+  accentSecondary={chmuraConfig.accentSecondary}
+  tabs={chmuraConfig.tabs}
+  timerMinutes={chmuraConfig.timerMinutes}
   hasSearch={true}
 >
-  <div id="panel-backend" class="panel active" role="tabpanel" aria-labelledby="tab-backend">
-    {shutterflyBackendPatterns.map(section => (
+  <div id="panel-angular" class="panel active" role="tabpanel" aria-labelledby="tab-angular">
+    {chmuraAngularPatterns.map(section => (
       <Fragment>
         <div class="section-label">{section.label}</div>
         <div class="pattern-grid">
@@ -26,8 +26,8 @@ import { shutterflyConfig, shutterflyBackendPatterns, shutterflyCloudPatterns, s
     ))}
   </div>
 
-  <div id="panel-cloud" class="panel" role="tabpanel" aria-labelledby="tab-cloud">
-    {shutterflyCloudPatterns.map(section => (
+  <div id="panel-rxjs" class="panel" role="tabpanel" aria-labelledby="tab-rxjs">
+    {chmuraRxjsPatterns.map(section => (
       <Fragment>
         <div class="section-label">{section.label}</div>
         <div class="pattern-grid">
@@ -37,8 +37,8 @@ import { shutterflyConfig, shutterflyBackendPatterns, shutterflyCloudPatterns, s
     ))}
   </div>
 
-  <div id="panel-coding" class="panel" role="tabpanel" aria-labelledby="tab-coding">
-    {shutterflyCodePatterns.map(section => (
+  <div id="panel-ui" class="panel" role="tabpanel" aria-labelledby="tab-ui">
+    {chmuraUiPatterns.map(section => (
       <Fragment>
         <div class="section-label">{section.label}</div>
         <div class="pattern-grid">
@@ -49,10 +49,10 @@ import { shutterflyConfig, shutterflyBackendPatterns, shutterflyCloudPatterns, s
   </div>
 
   <div id="panel-questions" class="panel" role="tabpanel" aria-labelledby="tab-questions">
-    {shutterflyQuestions.map(q => <QuestionCard {...q} />)}
+    {chmuraQuestions.map(q => <QuestionCard {...q} />)}
   </div>
 
   <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
-    <GamePlanPanel {...shutterflyGamePlan} />
+    <GamePlanPanel {...chmuraGamePlan} />
   </div>
 </CheatsheetLayout>

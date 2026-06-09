@@ -6,231 +6,820 @@ import type {
 } from './types';
 
 /**
- * Shutterfly cheatsheet data.
- * 39 Known Problems — 5 Easy, 25 Medium, 9 Hard
- * Top Topics: Array, Hash Table, DP, String, Math
+ * Shutterfly Software Engineer II — Interview Cheat Sheet
+ * Interview Format: Phone Screen → 2 Technical Rounds (Java/Architecture) → Managerial
+ * Real Stack: PHP, Java, Node.js, Python | AWS (ECS, EC2, S3, SQS, Aurora) | Docker | Terraform
+ * Scale: 80M users, 75+ PB image library, 100k req/min peak, 300 services across 40+ app suites
+ * Also: 39 Known LeetCode Problems — 5 Easy, 25 Medium, 9 Hard
  */
 
 export const shutterflyConfig: CompanyConfig = {
   slug: 'shutterfly',
-  title: 'Shutterfly Coding Assessment — Cheat Sheet',
+  title: 'Shutterfly SWE II — Interview Cheat Sheet',
   subtitle:
-    '39 Known Problems — 5 Easy, 25 Medium, 9 Hard · Top Topics: Array, Hash Table, DP, String, Math',
+    'Phone Screen → 2 Technical Rounds (Java + Architecture) → Managerial · 80M users · 75+ PB on AWS',
   accentColor: '#6B2D8B',
   accentSecondary: '#00B2A9',
-  timerMinutes: 90,
+  timerMinutes: 60,
   tabs: [
-    { id: 'arrays', label: 'Array/String Patterns' },
-    { id: 'dp', label: 'DP/Math Patterns' },
+    { id: 'backend', label: 'Backend/Architecture' },
+    { id: 'cloud', label: 'AWS/Infra' },
+    { id: 'coding', label: 'Coding Problems' },
     { id: 'questions', label: 'Likely Questions' },
     { id: 'plan', label: 'Game Plan' },
   ],
 };
 
 // ---------------------------------------------------------------------------
-// Array/String Patterns
+// Backend / Architecture Patterns
 // ---------------------------------------------------------------------------
 
-export const shutterflyArrayPatterns: PatternSection[] = [
+export const shutterflyBackendPatterns: PatternSection[] = [
   {
-    label: 'Two Pointers',
+    label: 'Shutterfly Architecture Context',
     cards: [
       {
-        title: 'Two Sum II — Sorted Array',
+        title: 'Shutterfly System Overview',
+        lang: 'bash',
+        description:
+          'Key facts: 80M users, 75+ PB image library on S3, 100k req/min peak, 300 services across 40+ app suites. Migrated 80% to ECS, 20% EC2.',
+        code: `# Shutterfly Infrastructure (from AWS Case Study 2025)
+# ─────────────────────────────────────────────────────
+# Scale: 80 million users, 75+ petabyte consumer image library
+# Traffic: 100,000 API requests/minute during peak season
+# Services: 300 services across 40+ application suites
+# Compute: 80% Amazon ECS (containers), 20% Amazon EC2
+# Storage: S3 (images + archival), FSx for NetApp ONTAP
+# Database: Aurora PostgreSQL, DynamoDB, ElastiCache (Redis)
+# Search: AWS OpenSearch (migrated from ElasticSearch)
+# CDN: CloudFront
+# Monitoring: Grafana, Splunk, AppDynamics
+# IaC: Terraform, Docker
+# Languages: Java, PHP (Symfony), Node.js, Python
+# CI/CD: Containerized pipeline → ECS deployments
+# Divisions: Consumer (Shutterfly/Snapfish/Spoonflower), Lifetouch, SBS`,
+        metaTags: ['architecture', 'scale', 'AWS', 'ECS', '75PB'],
+      },
+    ],
+  },
+  {
+    label: 'Spring Boot REST APIs',
+    cards: [
+      {
+        title: 'RESTful Controller with Validation',
         lang: 'java',
         description:
-          'Use left/right pointers converging toward center. Move left up if sum too small, right down if too large.',
-        code: `public int[] twoSum(int[] nums, int target) {
+          'Standard Spring Boot REST controller with request validation, proper HTTP status codes, and exception handling.',
+        code: `@RestController
+@RequestMapping("/api/v1/orders")
+public class OrderController {
+
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDto> getOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.findById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<OrderDto> createOrder(
+            @Valid @RequestBody CreateOrderRequest request) {
+        OrderDto created = orderService.create(request);
+        URI location = URI.create("/api/v1/orders/" + created.getId());
+        return ResponseEntity.created(location).body(created);
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(OrderNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse(ex.getMessage()));
+    }
+}`,
+        metaTags: ['spring boot', 'REST', 'controller', 'validation'],
+      },
+      {
+        title: 'Service Layer + Domain Events',
+        lang: 'java',
+        description:
+          'Service layer with @Transactional, domain logic isolation, event publishing for async consumers.',
+        code: `@Service
+@Transactional(readOnly = true)
+public class PhotoAlbumService {
+
+    private final AlbumRepository albumRepo;
+    private final SqsTemplate sqsTemplate;
+
+    @Transactional
+    public AlbumDto create(CreateAlbumRequest request) {
+        Album album = Album.builder()
+            .userId(request.getUserId())
+            .title(request.getTitle())
+            .status(AlbumStatus.ACTIVE)
+            .build();
+
+        Album saved = albumRepo.save(album);
+
+        // Publish event for async thumbnail generation
+        sqsTemplate.send("album-events",
+            new AlbumCreatedEvent(saved.getId(), saved.getUserId()));
+
+        return AlbumMapper.toDto(saved);
+    }
+
+    public Page<AlbumDto> findByUser(Long userId, Pageable pageable) {
+        return albumRepo.findByUserId(userId, pageable)
+            .map(AlbumMapper::toDto);
+    }
+}`,
+        metaTags: ['service layer', 'transactional', 'domain events', 'SQS'],
+      },
+    ],
+  },
+  {
+    label: 'PostgreSQL / Aurora',
+    cards: [
+      {
+        title: 'Spring Data JPA with Aurora PostgreSQL',
+        lang: 'java',
+        description:
+          'Repository pattern with custom JPQL, native queries, and PostgreSQL-specific features.',
+        code: `@Repository
+public interface PhotoRepository extends JpaRepository<Photo, Long> {
+
+    @Query("""
+        SELECT p FROM Photo p
+        JOIN FETCH p.tags
+        WHERE p.albumId = :albumId
+        AND p.status = 'ACTIVE'
+        ORDER BY p.uploadedAt DESC
+        """)
+    List<Photo> findByAlbum(@Param("albumId") Long albumId);
+
+    @Query(value = """
+        SELECT date_trunc('month', uploaded_at) AS month,
+               COUNT(*) AS photo_count,
+               SUM(file_size_bytes) AS total_bytes
+        FROM photos
+        WHERE user_id = :userId AND uploaded_at >= :since
+        GROUP BY month ORDER BY month DESC
+        """, nativeQuery = true)
+    List<MonthlyStats> getMonthlyStats(
+        @Param("userId") Long userId,
+        @Param("since") LocalDateTime since);
+}`,
+        metaTags: ['JPA', 'Aurora PostgreSQL', 'repository', 'JPQL'],
+      },
+      {
+        title: 'Connection Pool + Read Replicas',
+        lang: 'java',
+        description:
+          'HikariCP for Aurora PostgreSQL with read/write splitting for scale.',
+        code: `// application.yml
+// spring.datasource.hikari:
+//   maximum-pool-size: 20
+//   minimum-idle: 5
+//   connection-timeout: 30000
+//   max-lifetime: 1800000
+
+@Configuration
+public class DataSourceConfig {
+    @Bean @Primary
+    public DataSource routingDataSource(
+            @Qualifier("writer") DataSource writer,
+            @Qualifier("reader") DataSource reader) {
+        var routing = new ReadWriteRoutingDataSource();
+        routing.setTargetDataSources(Map.of(
+            "writer", writer, "reader", reader));
+        routing.setDefaultTargetDataSource(writer);
+        return routing;
+    }
+}
+
+// Usage: @Transactional(readOnly = true) routes to reader
+// @Transactional routes to writer endpoint`,
+        metaTags: ['HikariCP', 'Aurora', 'read replicas', 'connection pool'],
+      },
+    ],
+  },
+  {
+    label: 'Microservices & Domain Services',
+    cards: [
+      {
+        title: 'Domain-Driven Aggregate with Optimistic Locking',
+        lang: 'java',
+        description:
+          'Aggregate root pattern with state transitions and domain events for async processing.',
+        code: `@Entity
+public class PhotoOrder {  // Aggregate Root
+    @Id @GeneratedValue private Long id;
+    @Enumerated(EnumType.STRING) private OrderStatus status;
+    @OneToMany(cascade = CascadeType.ALL) private List<OrderItem> items;
+    @Version private Long version;  // Optimistic locking
+
+    public void submit() {
+        if (status != OrderStatus.DRAFT)
+            throw new IllegalStateException("Only drafts can be submitted");
+        this.status = OrderStatus.SUBMITTED;
+        registerEvent(new OrderSubmittedEvent(this.id));
+    }
+
+    public void fulfill() {
+        if (status != OrderStatus.SUBMITTED)
+            throw new IllegalStateException("Order not submitted");
+        this.status = OrderStatus.FULFILLED;
+        registerEvent(new OrderFulfilledEvent(this.id));
+    }
+}
+
+// Async event listener — publishes to RabbitMQ after commit
+@TransactionalEventListener(phase = AFTER_COMMIT)
+public void onSubmitted(OrderSubmittedEvent event) {
+    rabbitTemplate.convertAndSend("order.exchange",
+        "order.submitted", event);
+}`,
+        metaTags: ['DDD', 'aggregate root', 'optimistic locking', 'events'],
+      },
+    ],
+  },
+  {
+    label: 'GraphQL (plus)',
+    cards: [
+      {
+        title: 'Spring GraphQL with DataLoader',
+        lang: 'java',
+        description:
+          'GraphQL resolver with N+1 prevention via DataLoader batch loading.',
+        code: `@Controller
+public class AlbumGraphqlController {
+
+    @QueryMapping
+    public List<Album> albums(@Argument Long userId, @Argument int limit) {
+        return albumService.findByUser(userId, limit);
+    }
+
+    @SchemaMapping(typeName = "Album", field = "photos")
+    public CompletableFuture<List<Photo>> photos(
+            Album album,
+            DataLoader<Long, List<Photo>> photoLoader) {
+        return photoLoader.load(album.getId());
+    }
+
+    @MutationMapping
+    public Album createAlbum(@Valid @Argument AlbumInput input) {
+        return albumService.create(input);
+    }
+}
+// schema: type Album { id: ID!, title: String!, photos: [Photo!]! }`,
+        metaTags: ['GraphQL', 'Spring', 'DataLoader', 'N+1'],
+      },
+    ],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Cloud / Infrastructure Patterns
+// ---------------------------------------------------------------------------
+
+export const shutterflyCloudPatterns: PatternSection[] = [
+  {
+    label: 'AWS Services (S3, SQS, ECS, Aurora, CloudFront)',
+    cards: [
+      {
+        title: 'S3 Pre-signed URLs for Image Upload (75PB scale)',
+        lang: 'java',
+        description:
+          'Direct client upload to S3 via pre-signed URLs. Shutterfly stores 75+ PB of images this way.',
+        code: `@Service
+public class ImageUploadService {
+    private final S3Presigner presigner;
+
+    public PresignedUrlResponse generateUploadUrl(String fileName) {
+        String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
+
+        PutObjectRequest putReq = PutObjectRequest.builder()
+            .bucket("sfly-prod-images")
+            .key(key)
+            .contentType("image/jpeg")
+            .build();
+
+        PresignedPutObjectRequest presigned = presigner.presignPutObject(
+            PutObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(15))
+                .putObjectRequest(putReq)
+                .build());
+
+        return new PresignedUrlResponse(presigned.url().toString(), key);
+    }
+}
+// Flow: Client → API (presign) → S3 direct upload
+//       S3 Event → SQS → Worker (thumbnails, metadata)`,
+        metaTags: ['S3', 'pre-signed URL', 'upload', '75PB'],
+      },
+      {
+        title: 'SQS Event-Driven Processing',
+        lang: 'java',
+        description:
+          'Async message processing with SQS: decouple upload from thumbnail generation and metadata extraction.',
+        code: `// Producer — triggered by S3 event or service
+@Service
+public class PhotoEventPublisher {
+    private final SqsTemplate sqsTemplate;
+
+    public void publishUploadComplete(PhotoUploadedEvent event) {
+        sqsTemplate.send(to -> to
+            .queue("photo-processing")
+            .payload(event)
+            .header("eventType", "PHOTO_UPLOADED")
+        );
+    }
+}
+
+// Consumer — generates thumbnails, extracts EXIF
+@SqsListener("photo-processing")
+public void handlePhotoUploaded(
+        @Payload PhotoUploadedEvent event,
+        @Header("eventType") String type) {
+    log.info("Processing photo {} for user {}", event.key(), event.userId());
+
+    // Generate multiple thumbnail sizes
+    thumbnailService.generate(event.bucket(), event.key());
+
+    // Extract and store metadata (EXIF, dimensions, GPS)
+    metadataService.extract(event);
+}`,
+        metaTags: ['SQS', 'async', 'event-driven', 'thumbnails'],
+      },
+    ],
+  },
+  {
+    label: 'ECS Container Deployments',
+    cards: [
+      {
+        title: 'ECS Task Definition & Service (80% of Shutterfly)',
+        lang: 'bash',
+        description:
+          'Shutterfly runs 80% of workloads on ECS. Containerized services with auto-scaling.',
+        code: `# Terraform — ECS Service
+resource "aws_ecs_service" "photos_api" {
+  name            = "photos-api"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.photos_api.arn
+  desired_count   = 3
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = var.private_subnets
+    security_groups = [aws_security_group.ecs.id]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.photos.arn
+    container_name   = "photos-api"
+    container_port   = 8080
+  }
+}
+
+# Auto-scaling based on request count
+resource "aws_appautoscaling_target" "photos" {
+  max_capacity       = 20
+  min_capacity       = 3
+  resource_id        = "service/\${aws_ecs_cluster.main.name}/photos-api"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}`,
+        metaTags: ['ECS', 'Fargate', 'Terraform', 'auto-scaling'],
+      },
+    ],
+  },
+  {
+    label: 'RabbitMQ Messaging',
+    cards: [
+      {
+        title: 'RabbitMQ with Dead-Letter Queue & Retry',
+        lang: 'java',
+        description:
+          'Pub/sub with topic exchange, DLQ for failed messages, and manual ack for reliability.',
+        code: `@Configuration
+public class RabbitConfig {
+    @Bean
+    public TopicExchange orderExchange() {
+        return new TopicExchange("order.exchange");
+    }
+
+    @Bean
+    public Queue orderQueue() {
+        return QueueBuilder.durable("order.processing")
+            .withArgument("x-dead-letter-exchange", "order.dlx")
+            .withArgument("x-dead-letter-routing-key", "order.dead")
+            .withArgument("x-message-ttl", 60000)
+            .build();
+    }
+}
+
+// Consumer with manual ack
+@RabbitListener(queues = "order.processing")
+public void process(OrderEvent event, Channel channel,
+                    @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
+    try {
+        fulfillmentService.process(event);
+        channel.basicAck(tag, false);
+    } catch (RetryableException e) {
+        channel.basicNack(tag, false, true);  // requeue
+    } catch (Exception e) {
+        channel.basicNack(tag, false, false); // send to DLQ
+    }
+}`,
+        metaTags: ['RabbitMQ', 'DLQ', 'topic exchange', 'manual ack'],
+      },
+    ],
+  },
+  {
+    label: 'Terraform & CI/CD',
+    cards: [
+      {
+        title: 'Terraform Module — Aurora + S3 + SQS',
+        lang: 'bash',
+        description:
+          'Infrastructure as code matching Shutterfly stack: Aurora PostgreSQL, S3, SQS with DLQ.',
+        code: `resource "aws_rds_cluster" "main" {
+  cluster_identifier     = "sfly-\${var.env}"
+  engine                 = "aurora-postgresql"
+  engine_version         = "15.4"
+  database_name          = "shutterfly"
+  master_username        = var.db_username
+  master_password        = var.db_password
+  vpc_security_group_ids = [aws_security_group.db.id]
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+
+  serverlessv2_scaling_configuration {
+    min_capacity = 0.5
+    max_capacity = 16
+  }
+}
+
+resource "aws_sqs_queue" "photo_processing" {
+  name                       = "photo-processing-\${var.env}"
+  visibility_timeout_seconds = 60
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.photo_dlq.arn
+    maxReceiveCount     = 3
+  })
+}
+
+resource "aws_s3_bucket" "images" {
+  bucket = "sfly-images-\${var.env}"
+}`,
+        metaTags: ['Terraform', 'Aurora', 'S3', 'SQS', 'IaC'],
+      },
+    ],
+  },
+  {
+    label: 'Testing (CI/CD)',
+    cards: [
+      {
+        title: 'Integration Test with Testcontainers',
+        lang: 'java',
+        description:
+          'Full integration test with real PostgreSQL + LocalStack (S3/SQS) in containers.',
+        code: `@SpringBootTest(webEnvironment = RANDOM_PORT)
+@Testcontainers
+class PhotoServiceIntegrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres =
+        new PostgreSQLContainer<>("postgres:15");
+
+    @Container
+    static LocalStackContainer localstack =
+        new LocalStackContainer(DockerImageName.parse("localstack/localstack:3"))
+            .withServices(S3, SQS);
+
+    @DynamicPropertySource
+    static void configure(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("aws.endpoint", () -> localstack.getEndpoint().toString());
+    }
+
+    @Autowired TestRestTemplate restTemplate;
+
+    @Test
+    void uploadFlow_generatesPresignedUrl() {
+        var response = restTemplate.postForEntity(
+            "/api/v1/photos/upload-url?fileName=test.jpg",
+            null, PresignedUrlResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().url()).contains("sfly-images");
+    }
+}`,
+        metaTags: ['Testcontainers', 'integration test', 'LocalStack', 'CI/CD'],
+      },
+    ],
+  },
+  {
+    label: 'AI/LLM Integration',
+    cards: [
+      {
+        title: 'Photo Auto-Tagging with LLM',
+        lang: 'python',
+        description:
+          'Shutterfly uses AI for photo tagging, smart albums, product descriptions. Key use case for the role.',
+        code: `import openai
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+async def tag_photo(image_url: str) -> list[str]:
+    """Auto-tag photos for smart albums and search."""
+    response = await openai.chat.completions.create(
+        model="gpt-4-vision-preview",
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "List descriptive tags for this photo. Return JSON array."},
+                {"type": "image_url", "image_url": {"url": image_url}}
+            ]
+        }],
+        max_tokens=100,
+    )
+    return json.loads(response.choices[0].message.content)
+
+# Batch with concurrency limit (respect rate limits)
+async def process_album(photos: list[str]) -> list[list[str]]:
+    sem = asyncio.Semaphore(5)
+    async def limited(url):
+        async with sem:
+            return await tag_photo(url)
+    return await asyncio.gather(*[limited(p) for p in photos])`,
+        metaTags: ['LLM', 'photo tagging', 'AI', 'vision API'],
+      },
+    ],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Coding Problems — Top Shutterfly LeetCode (from InterviewSolver, ranked by frequency)
+// ---------------------------------------------------------------------------
+
+export const shutterflyCodePatterns: PatternSection[] = [
+  {
+    label: 'Trees & Graphs (High Frequency)',
+    cards: [
+      {
+        title: 'Lowest Common Ancestor of Binary Tree (94%)',
+        lang: 'java',
+        description:
+          '#2 most asked. Recursively check left/right subtrees. If both return non-null, current node is LCA.',
+        code: `public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q) return root;
+    TreeNode left = lowestCommonAncestor(root.left, p, q);
+    TreeNode right = lowestCommonAncestor(root.right, p, q);
+    if (left != null && right != null) return root;
+    return left != null ? left : right;
+}`,
+        metaTags: ['tree', 'DFS', 'LCA', '94% frequency'],
+      },
+      {
+        title: 'Number of Islands II (79%) — Union-Find',
+        lang: 'java',
+        description:
+          'Dynamic grid with add-land operations. Use Union-Find to merge adjacent islands efficiently.',
+        code: `public List<Integer> numIslands2(int m, int n, int[][] positions) {
+    int[] parent = new int[m * n];
+    int[] rank = new int[m * n];
+    Arrays.fill(parent, -1);
+    List<Integer> result = new ArrayList<>();
+    int count = 0;
+    int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};
+
+    for (int[] pos : positions) {
+        int id = pos[0] * n + pos[1];
+        if (parent[id] != -1) { result.add(count); continue; }
+        parent[id] = id;
+        count++;
+        for (int[] d : dirs) {
+            int nr = pos[0] + d[0], nc = pos[1] + d[1];
+            int nid = nr * n + nc;
+            if (nr >= 0 && nr < m && nc >= 0 && nc < n && parent[nid] != -1) {
+                int px = find(parent, id), py = find(parent, nid);
+                if (px != py) { union(parent, rank, px, py); count--; }
+            }
+        }
+        result.add(count);
+    }
+    return result;
+}
+
+private int find(int[] p, int x) {
+    while (p[x] != x) { p[x] = p[p[x]]; x = p[x]; }
+    return x;
+}
+
+private void union(int[] p, int[] r, int x, int y) {
+    if (r[x] < r[y]) p[x] = y;
+    else if (r[x] > r[y]) p[y] = x;
+    else { p[y] = x; r[x]++; }
+}`,
+        metaTags: ['union-find', 'graph', 'islands', '79% frequency'],
+      },
+      {
+        title: 'Longest Increasing Path in a Matrix (74%)',
+        lang: 'java',
+        description:
+          'DFS + memoization. From each cell, try 4 directions where next value is strictly greater.',
+        code: `private int[][] dirs = {{0,1},{0,-1},{1,0},{-1,0}};
+
+public int longestIncreasingPath(int[][] matrix) {
+    int m = matrix.length, n = matrix[0].length;
+    int[][] memo = new int[m][n];
+    int max = 0;
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++)
+            max = Math.max(max, dfs(matrix, memo, i, j));
+    return max;
+}
+
+private int dfs(int[][] matrix, int[][] memo, int r, int c) {
+    if (memo[r][c] != 0) return memo[r][c];
+    int best = 1;
+    for (int[] d : dirs) {
+        int nr = r + d[0], nc = c + d[1];
+        if (nr >= 0 && nr < matrix.length && nc >= 0 && nc < matrix[0].length
+                && matrix[nr][nc] > matrix[r][c]) {
+            best = Math.max(best, 1 + dfs(matrix, memo, nr, nc));
+        }
+    }
+    return memo[r][c] = best;
+}`,
+        metaTags: ['DFS', 'memoization', 'matrix', '74% frequency'],
+      },
+    ],
+  },
+  {
+    label: 'Arrays & Binary Search (High Frequency)',
+    cards: [
+      {
+        title: 'Find Peak Element (84%)',
+        lang: 'java',
+        description:
+          'Binary search — move toward the side with a larger neighbor. O(log n).',
+        code: `public int findPeakElement(int[] nums) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
-        int sum = nums[lo] + nums[hi];
-        if (sum == target) return new int[]{lo + 1, hi + 1};
-        else if (sum < target) lo++;
-        else hi--;
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+        else hi = mid;
     }
-    return new int[]{-1, -1};
+    return lo;
 }`,
-        metaTags: ['two pointers', 'sorted array', 'O(n)'],
+        metaTags: ['binary search', 'peak', '84% frequency'],
       },
       {
-        title: 'Container With Most Water',
+        title: 'Next Permutation (81%)',
         lang: 'java',
         description:
-          'Maximize area between two lines. Move the shorter pointer inward since it limits height.',
-        code: `public int maxArea(int[] height) {
-    int lo = 0, hi = height.length - 1, max = 0;
+          'Find rightmost ascent, swap with next larger element, reverse suffix.',
+        code: `public void nextPermutation(int[] nums) {
+    int i = nums.length - 2;
+    while (i >= 0 && nums[i] >= nums[i + 1]) i--;
+    if (i >= 0) {
+        int j = nums.length - 1;
+        while (nums[j] <= nums[i]) j--;
+        swap(nums, i, j);
+    }
+    reverse(nums, i + 1, nums.length - 1);
+}
+
+private void swap(int[] a, int i, int j) {
+    int t = a[i]; a[i] = a[j]; a[j] = t;
+}
+private void reverse(int[] a, int l, int r) {
+    while (l < r) swap(a, l++, r--);
+}`,
+        metaTags: ['array', 'permutation', '81% frequency'],
+      },
+      {
+        title: 'Find K Closest Elements (62%)',
+        lang: 'java',
+        description:
+          'Binary search for the left bound of the k-length window closest to target.',
+        code: `public List<Integer> findClosestElements(int[] arr, int k, int x) {
+    int lo = 0, hi = arr.length - k;
     while (lo < hi) {
-        int area = Math.min(height[lo], height[hi]) * (hi - lo);
-        max = Math.max(max, area);
-        if (height[lo] < height[hi]) lo++;
-        else hi--;
+        int mid = lo + (hi - lo) / 2;
+        // Compare distances of window boundaries
+        if (x - arr[mid] > arr[mid + k] - x) lo = mid + 1;
+        else hi = mid;
     }
-    return max;
+    List<Integer> result = new ArrayList<>();
+    for (int i = lo; i < lo + k; i++) result.add(arr[i]);
+    return result;
 }`,
-        metaTags: ['two pointers', 'greedy', 'O(n)'],
+        metaTags: ['binary search', 'sliding window', '62% frequency'],
       },
     ],
   },
   {
-    label: 'Sliding Window',
+    label: 'Dynamic Programming (High Frequency)',
     cards: [
       {
-        title: 'Longest Substring Without Repeating Characters',
+        title: 'K Inverse Pairs Array (94%) — Hard',
         lang: 'java',
         description:
-          'Expand window right, shrink left when duplicate found. Track last-seen index in a map.',
-        code: `public int lengthOfLongestSubstring(String s) {
-    Map<Character, Integer> map = new HashMap<>();
-    int max = 0, left = 0;
-    for (int right = 0; right < s.length(); right++) {
-        char c = s.charAt(right);
-        if (map.containsKey(c)) {
-            left = Math.max(left, map.get(c) + 1);
-        }
-        map.put(c, right);
-        max = Math.max(max, right - left + 1);
-    }
-    return max;
-}`,
-        metaTags: ['sliding window', 'hash map', 'O(n)'],
-      },
-      {
-        title: 'Minimum Window Substring',
-        lang: 'java',
-        description:
-          'Expand right to satisfy condition, shrink left to minimize. Track character frequencies.',
-        code: `public String minWindow(String s, String t) {
-    int[] need = new int[128];
-    for (char c : t.toCharArray()) need[c]++;
-    int left = 0, count = t.length(), minLen = Integer.MAX_VALUE, start = 0;
-    for (int right = 0; right < s.length(); right++) {
-        if (need[s.charAt(right)]-- > 0) count--;
-        while (count == 0) {
-            if (right - left + 1 < minLen) {
-                minLen = right - left + 1;
-                start = left;
-            }
-            if (++need[s.charAt(left)] > 0) count++;
-            left++;
+          'dp[n][k] = # of arrays of [1..n] with exactly k inverse pairs. Use prefix sums for O(nk).',
+        code: `public int kInversePairs(int n, int k) {
+    int MOD = 1_000_000_007;
+    int[][] dp = new int[n + 1][k + 1];
+    dp[0][0] = 1;
+    for (int i = 1; i <= n; i++) {
+        long[] prefix = new long[k + 2];
+        for (int j = 0; j <= k; j++)
+            prefix[j + 1] = prefix[j] + dp[i - 1][j];
+        for (int j = 0; j <= k; j++) {
+            long val = prefix[j + 1] - prefix[Math.max(0, j - i + 1)];
+            dp[i][j] = (int)(val % MOD);
         }
     }
-    return minLen == Integer.MAX_VALUE ? "" : s.substring(start, start + minLen);
+    return dp[n][k];
 }`,
-        metaTags: ['sliding window', 'frequency', 'O(n)'],
+        metaTags: ['DP', 'prefix sum', 'inverse pairs', '94% frequency'],
       },
-    ],
-  },
-  {
-    label: 'Prefix Sum',
-    cards: [
       {
-        title: 'Subarray Sum Equals K',
+        title: 'House Robber (54%)',
         lang: 'java',
         description:
-          'Store prefix sums in a map. For each index, check if (currentSum - k) exists in the map.',
-        code: `public int subarraySum(int[] nums, int k) {
-    Map<Integer, Integer> prefixCount = new HashMap<>();
-    prefixCount.put(0, 1);
-    int sum = 0, count = 0;
+          'Classic 1D DP. dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Space-optimize to two vars.',
+        code: `public int rob(int[] nums) {
+    if (nums.length == 1) return nums[0];
+    int prev2 = 0, prev1 = 0;
     for (int num : nums) {
-        sum += num;
-        count += prefixCount.getOrDefault(sum - k, 0);
-        prefixCount.merge(sum, 1, Integer::sum);
+        int curr = Math.max(prev1, prev2 + num);
+        prev2 = prev1;
+        prev1 = curr;
     }
-    return count;
+    return prev1;
 }`,
-        metaTags: ['prefix sum', 'hash map', 'O(n)'],
+        metaTags: ['DP', 'house robber', '54% frequency'],
       },
-    ],
-  },
-  {
-    label: 'Hash Table Frequency Counting',
-    cards: [
       {
-        title: 'Top K Frequent Elements',
+        title: 'Best Time to Buy and Sell Stock IV (35%) — Hard',
         lang: 'java',
         description:
-          'Count frequencies with a map, then use bucket sort by frequency for O(n) solution.',
-        code: `public int[] topKFrequent(int[] nums, int k) {
-    Map<Integer, Integer> freq = new HashMap<>();
-    for (int n : nums) freq.merge(n, 1, Integer::sum);
-
-    List<Integer>[] buckets = new List[nums.length + 1];
-    for (var entry : freq.entrySet()) {
-        int f = entry.getValue();
-        if (buckets[f] == null) buckets[f] = new ArrayList<>();
-        buckets[f].add(entry.getKey());
+          'At most k transactions. dp[t][i] = max profit with t transactions up to day i.',
+        code: `public int maxProfit(int k, int[] prices) {
+    int n = prices.length;
+    if (k >= n / 2) { // unlimited transactions
+        int profit = 0;
+        for (int i = 1; i < n; i++)
+            profit += Math.max(0, prices[i] - prices[i - 1]);
+        return profit;
     }
-
-    int[] res = new int[k];
-    int idx = 0;
-    for (int i = buckets.length - 1; i >= 0 && idx < k; i--) {
-        if (buckets[i] != null) {
-            for (int val : buckets[i]) {
-                if (idx >= k) break;
-                res[idx++] = val;
-            }
+    int[][] dp = new int[k + 1][n];
+    for (int t = 1; t <= k; t++) {
+        int maxDiff = -prices[0];
+        for (int i = 1; i < n; i++) {
+            dp[t][i] = Math.max(dp[t][i - 1], prices[i] + maxDiff);
+            maxDiff = Math.max(maxDiff, dp[t - 1][i] - prices[i]);
         }
     }
-    return res;
+    return dp[k][n - 1];
 }`,
-        metaTags: ['hash map', 'bucket sort', 'frequency', 'O(n)'],
-      },
-      {
-        title: 'Group Anagrams',
-        lang: 'java',
-        description:
-          'Use sorted string or character count as hash key to group anagrams together.',
-        code: `public List<List<String>> groupAnagrams(String[] strs) {
-    Map<String, List<String>> map = new HashMap<>();
-    for (String s : strs) {
-        char[] chars = s.toCharArray();
-        Arrays.sort(chars);
-        String key = new String(chars);
-        map.computeIfAbsent(key, k -> new ArrayList<>()).add(s);
-    }
-    return new ArrayList<>(map.values());
-}`,
-        metaTags: ['hash map', 'anagram', 'sorting', 'O(n·k log k)'],
+        metaTags: ['DP', 'stock', 'k transactions', '35% frequency'],
       },
     ],
   },
   {
-    label: 'Monotonic Stack (Hard)',
+    label: 'Design & Stream (High Frequency)',
     cards: [
       {
-        title: 'Trapping Rain Water',
+        title: 'Moving Average from Data Stream (76%)',
         lang: 'java',
         description:
-          'Use a decreasing stack. When a taller bar is found, pop and compute trapped water between boundaries.',
-        code: `public int trap(int[] height) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int water = 0;
-    for (int i = 0; i < height.length; i++) {
-        while (!stack.isEmpty() && height[i] > height[stack.peek()]) {
-            int bottom = stack.pop();
-            if (stack.isEmpty()) break;
-            int left = stack.peek();
-            int w = i - left - 1;
-            int h = Math.min(height[i], height[left]) - height[bottom];
-            water += w * h;
-        }
-        stack.push(i);
+          'Sliding window with a queue. Maintain running sum for O(1) average.',
+        code: `class MovingAverage {
+    private Queue<Integer> queue = new LinkedList<>();
+    private int maxSize;
+    private double sum = 0;
+
+    public MovingAverage(int size) { this.maxSize = size; }
+
+    public double next(int val) {
+        queue.offer(val);
+        sum += val;
+        if (queue.size() > maxSize) sum -= queue.poll();
+        return sum / queue.size();
     }
-    return water;
 }`,
-        metaTags: ['monotonic stack', 'trapping rain water', 'O(n)'],
+        metaTags: ['design', 'queue', 'sliding window', '76% frequency'],
       },
-    ],
-  },
-  {
-    label: 'Heap / Stream Processing (Hard)',
-    cards: [
       {
-        title: 'Find Median from Data Stream',
+        title: 'Find Median from Data Stream (55%) — Hard',
         lang: 'java',
         description:
-          'Maintain a max-heap for lower half and min-heap for upper half. Balance sizes after each insert.',
+          'Two heaps: max-heap for lower half, min-heap for upper half. Balance after each insert.',
         code: `class MedianFinder {
     PriorityQueue<Integer> lo = new PriorityQueue<>(Collections.reverseOrder());
     PriorityQueue<Integer> hi = new PriorityQueue<>();
@@ -247,123 +836,46 @@ export const shutterflyArrayPatterns: PatternSection[] = [
             : (lo.peek() + hi.peek()) / 2.0;
     }
 }`,
-        metaTags: ['heap', 'median', 'data stream', 'O(log n)'],
-      },
-    ],
-  },
-  {
-    label: 'Expression Parsing (Hard)',
-    cards: [
-      {
-        title: 'Basic Calculator',
-        lang: 'java',
-        description:
-          'Use a stack to handle parentheses. Track current sign and push/pop sign context on parens.',
-        code: `public int calculate(String s) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int result = 0, num = 0, sign = 1;
-    stack.push(sign);
-    for (char c : s.toCharArray()) {
-        if (Character.isDigit(c)) {
-            num = num * 10 + (c - '0');
-        } else if (c == '+' || c == '-') {
-            result += sign * num;
-            num = 0;
-            sign = stack.peek() * (c == '+' ? 1 : -1);
-        } else if (c == '(') {
-            stack.push(sign);
-        } else if (c == ')') {
-            stack.pop();
-        }
-    }
-    return result + sign * num;
-}`,
-        metaTags: ['stack', 'expression parsing', 'calculator', 'O(n)'],
-      },
-    ],
-  },
-];
-
-
-// ---------------------------------------------------------------------------
-// DP / Math Patterns
-// ---------------------------------------------------------------------------
-
-export const shutterflyDpPatterns: PatternSection[] = [
-  {
-    label: '1D Dynamic Programming',
-    cards: [
-      {
-        title: 'House Robber',
-        lang: 'java',
-        description:
-          'Classic 1D DP: at each house decide to rob (skip prev) or skip. dp[i] = max(dp[i-1], dp[i-2] + nums[i]).',
-        code: `public int rob(int[] nums) {
-    if (nums.length == 1) return nums[0];
-    int prev2 = 0, prev1 = 0;
-    for (int num : nums) {
-        int curr = Math.max(prev1, prev2 + num);
-        prev2 = prev1;
-        prev1 = curr;
-    }
-    return prev1;
-}`,
-        metaTags: ['1D DP', 'house robber', 'O(n)'],
+        metaTags: ['heap', 'median', 'data stream', '55% frequency'],
       },
       {
-        title: 'Word Break',
+        title: 'Random Pick Index (86%) — Reservoir Sampling',
         lang: 'java',
         description:
-          'dp[i] = true if s[0..i) can be segmented using dictionary words. Check all valid suffixes.',
-        code: `public boolean wordBreak(String s, List<String> wordDict) {
-    Set<String> dict = new HashSet<>(wordDict);
-    boolean[] dp = new boolean[s.length() + 1];
-    dp[0] = true;
-    for (int i = 1; i <= s.length(); i++) {
-        for (int j = 0; j < i; j++) {
-            if (dp[j] && dict.contains(s.substring(j, i))) {
-                dp[i] = true;
-                break;
+          '#4 most asked. Pick random index of target value with equal probability using reservoir sampling.',
+        code: `class Solution {
+    private int[] nums;
+    private Random rand = new Random();
+
+    public Solution(int[] nums) { this.nums = nums; }
+
+    public int pick(int target) {
+        int result = -1, count = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == target) {
+                count++;
+                if (rand.nextInt(count) == 0) result = i;
             }
         }
+        return result;
     }
-    return dp[s.length()];
 }`,
-        metaTags: ['1D DP', 'word break', 'O(n²)'],
-      },
-      {
-        title: 'Longest Increasing Subsequence',
-        lang: 'java',
-        description:
-          'Patience sorting with binary search. Maintain tails array where tails[i] is smallest tail of IS of length i+1.',
-        code: `public int lengthOfLIS(int[] nums) {
-    List<Integer> tails = new ArrayList<>();
-    for (int num : nums) {
-        int pos = Collections.binarySearch(tails, num);
-        if (pos < 0) pos = -(pos + 1);
-        if (pos == tails.size()) tails.add(num);
-        else tails.set(pos, num);
-    }
-    return tails.size();
-}`,
-        metaTags: ['1D DP', 'binary search', 'LIS', 'O(n log n)'],
+        metaTags: ['reservoir sampling', 'random', '86% frequency'],
       },
     ],
   },
   {
-    label: '2D Dynamic Programming',
+    label: 'String & Backtracking',
     cards: [
       {
-        title: 'Longest Palindromic Substring',
+        title: 'Longest Palindromic Substring (64%)',
         lang: 'java',
         description:
-          'Expand around center for each index. Check both odd and even length palindromes.',
+          'Expand around center for odd/even lengths. O(n²) time, O(1) space.',
         code: `public String longestPalindrome(String s) {
     int start = 0, maxLen = 0;
     for (int i = 0; i < s.length(); i++) {
-        int len1 = expand(s, i, i);
-        int len2 = expand(s, i, i + 1);
-        int len = Math.max(len1, len2);
+        int len = Math.max(expand(s, i, i), expand(s, i, i + 1));
         if (len > maxLen) {
             maxLen = len;
             start = i - (len - 1) / 2;
@@ -378,215 +890,21 @@ private int expand(String s, int l, int r) {
     }
     return r - l - 1;
 }`,
-        metaTags: ['2D DP', 'palindrome', 'expand around center', 'O(n²)'],
+        metaTags: ['string', 'palindrome', 'expand around center', '64%'],
       },
       {
-        title: 'Longest Arithmetic Subsequence',
+        title: 'Subsets (76%)',
         lang: 'java',
         description:
-          'dp[i][diff] = length of longest arithmetic subsequence ending at i with given difference.',
-        code: `public int longestArithSeqLength(int[] nums) {
-    int n = nums.length, max = 2;
-    Map<Integer, Integer>[] dp = new HashMap[n];
-    for (int i = 0; i < n; i++) {
-        dp[i] = new HashMap<>();
-        for (int j = 0; j < i; j++) {
-            int diff = nums[i] - nums[j];
-            int prev = dp[j].getOrDefault(diff, 1);
-            dp[i].put(diff, prev + 1);
-            max = Math.max(max, dp[i].get(diff));
-        }
-    }
-    return max;
-}`,
-        metaTags: ['2D DP', 'arithmetic subsequence', 'O(n²)'],
-      },
-    ],
-  },
-  {
-    label: 'Interval DP',
-    cards: [
-      {
-        title: 'Burst Balloons',
-        lang: 'java',
-        description:
-          'dp[l][r] = max coins from bursting balloons in range (l, r). Choose last balloon to burst in each subrange.',
-        code: `public int maxCoins(int[] nums) {
-    int n = nums.length;
-    int[] arr = new int[n + 2];
-    arr[0] = arr[n + 1] = 1;
-    for (int i = 0; i < n; i++) arr[i + 1] = nums[i];
-
-    int[][] dp = new int[n + 2][n + 2];
-    for (int len = 1; len <= n; len++) {
-        for (int l = 1; l + len - 1 <= n; l++) {
-            int r = l + len - 1;
-            for (int k = l; k <= r; k++) {
-                dp[l][r] = Math.max(dp[l][r],
-                    dp[l][k - 1] + arr[l - 1] * arr[k] * arr[r + 1] + dp[k + 1][r]);
-            }
-        }
-    }
-    return dp[1][n];
-}`,
-        metaTags: ['interval DP', 'burst balloons', 'O(n³)'],
-      },
-    ],
-  },
-  {
-    label: 'Math Patterns',
-    cards: [
-      {
-        title: 'Modular Arithmetic — Power Mod',
-        lang: 'java',
-        description:
-          'Fast exponentiation with modulus. Used in combinatorics and large number problems.',
-        code: `public long powerMod(long base, long exp, long mod) {
-    long result = 1;
-    base %= mod;
-    while (exp > 0) {
-        if ((exp & 1) == 1) result = result * base % mod;
-        exp >>= 1;
-        base = base * base % mod;
-    }
-    return result;
-}`,
-        metaTags: ['math', 'modular arithmetic', 'O(log n)'],
-      },
-      {
-        title: 'Kth Factor of N',
-        lang: 'java',
-        description:
-          'Collect all factor pairs up to sqrt(n), sort, and return the k-th.',
-        code: `public int kthFactor(int n, int k) {
-    List<Integer> factors = new ArrayList<>();
-    for (int i = 1; i * i <= n; i++) {
-        if (n % i == 0) {
-            factors.add(i);
-            if (i != n / i) factors.add(n / i);
-        }
-    }
-    Collections.sort(factors);
-    return k <= factors.size() ? factors.get(k - 1) : -1;
-}`,
-        metaTags: ['math', 'factors', 'O(√n)'],
-      },
-      {
-        title: 'Combinatorics — nCr with Pascal Triangle',
-        lang: 'java',
-        description:
-          'Build Pascal triangle row by row. C(n,r) = C(n-1,r-1) + C(n-1,r). Avoids overflow for moderate n.',
-        code: `public int nCr(int n, int r) {
-    if (r > n - r) r = n - r; // optimization
-    long result = 1;
-    for (int i = 0; i < r; i++) {
-        result = result * (n - i) / (i + 1);
-    }
-    return (int) result;
-}
-
-// Generate all combinations (Subsets-style)
-public List<List<Integer>> combine(int n, int k) {
-    List<List<Integer>> res = new ArrayList<>();
-    backtrack(res, new ArrayList<>(), 1, n, k);
-    return res;
-}
-
-private void backtrack(List<List<Integer>> res, List<Integer> curr, int start, int n, int k) {
-    if (curr.size() == k) { res.add(new ArrayList<>(curr)); return; }
-    for (int i = start; i <= n - (k - curr.size()) + 1; i++) {
-        curr.add(i);
-        backtrack(res, curr, i + 1, n, k);
-        curr.remove(curr.size() - 1);
-    }
-}`,
-        metaTags: ['math', 'combinatorics', 'backtracking', 'nCr'],
-      },
-    ],
-  },
-];
-
-
-// ---------------------------------------------------------------------------
-// Likely Questions (minimum 11 known Shutterfly problems)
-// ---------------------------------------------------------------------------
-
-export const shutterflyQuestions: QuestionItem[] = [
-  {
-    name: 'Find Peak Element',
-    diff: 'medium',
-    hint: 'Binary search — move toward the side with a larger neighbor.',
-    lang: 'java',
-    code: `public int findPeakElement(int[] nums) {
-    int lo = 0, hi = nums.length - 1;
-    while (lo < hi) {
-        int mid = lo + (hi - lo) / 2;
-        if (nums[mid] < nums[mid + 1]) lo = mid + 1;
-        else hi = mid;
-    }
-    return lo;
-}`,
-  },
-  {
-    name: 'Next Permutation',
-    diff: 'medium',
-    hint: 'Find rightmost ascent, swap with next larger, reverse suffix.',
-    lang: 'java',
-    code: `public void nextPermutation(int[] nums) {
-    int i = nums.length - 2;
-    while (i >= 0 && nums[i] >= nums[i + 1]) i--;
-    if (i >= 0) {
-        int j = nums.length - 1;
-        while (nums[j] <= nums[i]) j--;
-        swap(nums, i, j);
-    }
-    reverse(nums, i + 1, nums.length - 1);
-}
-
-private void swap(int[] a, int i, int j) {
-    int t = a[i]; a[i] = a[j]; a[j] = t;
-}
-
-private void reverse(int[] a, int l, int r) {
-    while (l < r) { swap(a, l++, r--); }
-}`,
-  },
-  {
-    name: 'Rotate Image',
-    diff: 'medium',
-    hint: 'Transpose matrix then reverse each row for 90° clockwise rotation.',
-    lang: 'java',
-    code: `public void rotate(int[][] matrix) {
-    int n = matrix.length;
-    // Transpose
-    for (int i = 0; i < n; i++)
-        for (int j = i + 1; j < n; j++) {
-            int tmp = matrix[i][j];
-            matrix[i][j] = matrix[j][i];
-            matrix[j][i] = tmp;
-        }
-    // Reverse each row
-    for (int[] row : matrix) {
-        int l = 0, r = n - 1;
-        while (l < r) {
-            int tmp = row[l]; row[l] = row[r]; row[r] = tmp;
-            l++; r--;
-        }
-    }
-}`,
-  },
-  {
-    name: 'Subsets',
-    diff: 'medium',
-    hint: 'Backtracking: include or exclude each element. 2^n total subsets.',
-    lang: 'java',
-    code: `public List<List<Integer>> subsets(int[] nums) {
+          'Backtracking: include or exclude each element. 2^n total subsets.',
+        code: `public List<List<Integer>> subsets(int[] nums) {
     List<List<Integer>> res = new ArrayList<>();
     backtrack(res, new ArrayList<>(), nums, 0);
     return res;
 }
 
-private void backtrack(List<List<Integer>> res, List<Integer> curr, int[] nums, int start) {
+private void backtrack(List<List<Integer>> res, List<Integer> curr,
+                       int[] nums, int start) {
     res.add(new ArrayList<>(curr));
     for (int i = start; i < nums.length; i++) {
         curr.add(nums[i]);
@@ -594,242 +912,356 @@ private void backtrack(List<List<Integer>> res, List<Integer> curr, int[] nums, 
         curr.remove(curr.size() - 1);
     }
 }`,
-  },
-  {
-    name: 'Longest Increasing Subsequence',
-    diff: 'medium',
-    hint: 'Patience sorting: maintain tails array with binary search for O(n log n).',
-    lang: 'java',
-    code: `public int lengthOfLIS(int[] nums) {
-    List<Integer> tails = new ArrayList<>();
-    for (int num : nums) {
-        int pos = Collections.binarySearch(tails, num);
-        if (pos < 0) pos = -(pos + 1);
-        if (pos == tails.size()) tails.add(num);
-        else tails.set(pos, num);
-    }
-    return tails.size();
-}`,
-  },
-  {
-    name: 'House Robber',
-    diff: 'medium',
-    hint: 'DP: dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Space-optimize to two vars.',
-    lang: 'java',
-    code: `public int rob(int[] nums) {
-    if (nums.length == 1) return nums[0];
-    int prev2 = 0, prev1 = 0;
-    for (int num : nums) {
-        int curr = Math.max(prev1, prev2 + num);
-        prev2 = prev1;
-        prev1 = curr;
-    }
-    return prev1;
-}`,
-  },
-  {
-    name: 'Word Break',
-    diff: 'medium',
-    hint: 'DP: dp[i] = can s[0..i) be segmented? Check all j < i where dp[j] && dict has s[j..i).',
-    lang: 'java',
-    code: `public boolean wordBreak(String s, List<String> wordDict) {
-    Set<String> dict = new HashSet<>(wordDict);
-    boolean[] dp = new boolean[s.length() + 1];
-    dp[0] = true;
-    for (int i = 1; i <= s.length(); i++) {
-        for (int j = 0; j < i; j++) {
-            if (dp[j] && dict.contains(s.substring(j, i))) {
-                dp[i] = true;
-                break;
-            }
-        }
-    }
-    return dp[s.length()];
-}`,
-  },
-  {
-    name: 'Trapping Rain Water',
-    diff: 'hard',
-    hint: 'Monotonic stack or two-pointer approach. Water at i = min(maxL, maxR) - height[i].',
-    lang: 'java',
-    code: `public int trap(int[] height) {
-    int left = 0, right = height.length - 1;
-    int leftMax = 0, rightMax = 0, water = 0;
-    while (left < right) {
-        if (height[left] < height[right]) {
-            leftMax = Math.max(leftMax, height[left]);
-            water += leftMax - height[left];
-            left++;
-        } else {
-            rightMax = Math.max(rightMax, height[right]);
-            water += rightMax - height[right];
-            right--;
-        }
-    }
-    return water;
-}`,
-  },
-  {
-    name: 'Find Median from Data Stream',
-    diff: 'hard',
-    hint: 'Two heaps: max-heap for lower half, min-heap for upper half. Balance after each insert.',
-    lang: 'java',
-    code: `class MedianFinder {
-    PriorityQueue<Integer> lo = new PriorityQueue<>(Collections.reverseOrder());
-    PriorityQueue<Integer> hi = new PriorityQueue<>();
-
-    public void addNum(int num) {
-        lo.offer(num);
-        hi.offer(lo.poll());
-        if (hi.size() > lo.size()) lo.offer(hi.poll());
-    }
-
-    public double findMedian() {
-        return lo.size() > hi.size()
-            ? lo.peek()
-            : (lo.peek() + hi.peek()) / 2.0;
-    }
-}`,
-  },
-  {
-    name: 'Basic Calculator',
-    diff: 'hard',
-    hint: 'Stack for sign context. Push sign on open paren, pop on close. Process digits and +/-.',
-    lang: 'java',
-    code: `public int calculate(String s) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int result = 0, num = 0, sign = 1;
-    stack.push(sign);
-    for (char c : s.toCharArray()) {
-        if (Character.isDigit(c)) {
-            num = num * 10 + (c - '0');
-        } else if (c == '+' || c == '-') {
-            result += sign * num;
-            num = 0;
-            sign = stack.peek() * (c == '+' ? 1 : -1);
-        } else if (c == '(') {
-            stack.push(sign);
-        } else if (c == ')') {
-            stack.pop();
-        }
-    }
-    return result + sign * num;
-}`,
-  },
-  {
-    name: 'First Missing Positive',
-    diff: 'hard',
-    hint: 'Cyclic sort: place each num at index num-1. First index where nums[i] != i+1 is the answer.',
-    lang: 'java',
-    code: `public int firstMissingPositive(int[] nums) {
-    int n = nums.length;
-    for (int i = 0; i < n; i++) {
-        while (nums[i] > 0 && nums[i] <= n && nums[nums[i] - 1] != nums[i]) {
-            int tmp = nums[nums[i] - 1];
-            nums[nums[i] - 1] = nums[i];
-            nums[i] = tmp;
-        }
-    }
-    for (int i = 0; i < n; i++) {
-        if (nums[i] != i + 1) return i + 1;
-    }
-    return n + 1;
-}`,
-  },
-  {
-    name: 'Two Sum',
-    diff: 'easy',
-    hint: 'Hash map: store complement. One-pass O(n) solution.',
-    lang: 'java',
-    code: `public int[] twoSum(int[] nums, int target) {
-    Map<Integer, Integer> map = new HashMap<>();
-    for (int i = 0; i < nums.length; i++) {
-        int comp = target - nums[i];
-        if (map.containsKey(comp)) return new int[]{map.get(comp), i};
-        map.put(nums[i], i);
-    }
-    return new int[]{};
-}`,
-  },
-  {
-    name: 'Valid Parentheses',
-    diff: 'easy',
-    hint: 'Stack: push open brackets, pop and match on close brackets.',
-    lang: 'java',
-    code: `public boolean isValid(String s) {
-    Deque<Character> stack = new ArrayDeque<>();
-    for (char c : s.toCharArray()) {
-        if (c == '(') stack.push(')');
-        else if (c == '{') stack.push('}');
-        else if (c == '[') stack.push(']');
-        else if (stack.isEmpty() || stack.pop() != c) return false;
-    }
-    return stack.isEmpty();
-}`,
+        metaTags: ['backtracking', 'subsets', '76% frequency'],
+      },
+    ],
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Likely Interview Questions — Mix of Technical + Behavioral (55% behavioral per research)
+// ---------------------------------------------------------------------------
+
+export const shutterflyQuestions: QuestionItem[] = [
+  {
+    name: 'Design image upload system for 80M users (System Design)',
+    diff: 'hard',
+    hint: 'Pre-signed S3 URLs → SQS → ECS workers for thumbnails → Aurora metadata → CloudFront delivery.',
+    lang: 'java',
+    code: `// Shutterfly's actual architecture:
+// 1. Client requests pre-signed URL from API (Spring Boot on ECS)
+// 2. Client uploads directly to S3 (75+ PB image library)
+// 3. S3 event notification → SQS message
+// 4. ECS worker consumes message:
+//    - Generate thumbnails (multiple sizes)
+//    - Extract EXIF metadata (GPS, date, camera)
+//    - AI tagging (faces, places, events)
+// 5. Store metadata in Aurora PostgreSQL
+// 6. Serve via CloudFront CDN (100k req/min at peak)
+
+// Key decisions:
+// - Pre-signed URLs avoid server as upload bottleneck
+// - SQS decouples upload from processing (async)
+// - ECS auto-scales workers based on queue depth
+// - Read replicas for read-heavy photo browsing
+// - OpenSearch for full-text + tag-based search`,
+  },
+  {
+    name: 'Explain async messaging patterns and when to use each',
+    diff: 'medium',
+    hint: 'Point-to-point (SQS), pub/sub (SNS+SQS fan-out), RabbitMQ topics, DLQ for poison messages.',
+    lang: 'java',
+    code: `// Shutterfly uses both SQS and RabbitMQ:
+// ─────────────────────────────────────────
+// SQS: Simple queue for decoupling services
+//   - Photo processing pipeline (upload → thumbnail → metadata)
+//   - Order fulfillment events
+//   - Redrive policy: 3 retries → DLQ
+
+// RabbitMQ: Complex routing with topic exchanges
+//   - order.created.* → fulfillment, notification, analytics
+//   - photo.tagged.* → search indexing, album suggestions
+//   - Manual ack for reliable processing
+
+// Idempotency (critical at 100k req/min):
+@SqsListener("photo-processing")
+public void handle(PhotoEvent event) {
+    String dedupKey = event.messageId();
+    if (redis.setIfAbsent(dedupKey, "1", Duration.ofHours(24))) {
+        processPhoto(event);  // Only process once
+    }
+}`,
+  },
+  {
+    name: 'How would you improve performance of a photo e-commerce site?',
+    diff: 'medium',
+    hint: 'CDN (CloudFront), image lazy loading, DB read replicas, caching (ElastiCache/Redis), OpenSearch.',
+    lang: 'java',
+    code: `// Performance strategy for 100k req/min:
+// 1. CDN: CloudFront for all static assets + images
+// 2. Caching: ElastiCache (Redis) for hot data
+//    - User sessions, album metadata, product configs
+//    - Cache-aside pattern with TTL
+// 3. Database: Aurora read replicas for browse queries
+// 4. Search: OpenSearch for product/photo search
+// 5. Async: Offload heavy work to SQS + workers
+// 6. Container scaling: ECS auto-scale on CPU/request count
+
+@Cacheable(value = "albums", key = "#userId")
+public List<AlbumDto> getAlbums(Long userId) {
+    return albumRepo.findByUserId(userId).stream()
+        .map(AlbumMapper::toDto).toList();
+}
+
+@CacheEvict(value = "albums", key = "#userId")
+@Transactional
+public AlbumDto createAlbum(Long userId, CreateAlbumRequest req) {
+    // ... invalidate cache on write
+}`,
+  },
+  {
+    name: 'Walk me through migrating from monolith to microservices',
+    diff: 'hard',
+    hint: 'Strangler fig pattern, bounded contexts, Shutterfly has 300 services across 40+ app suites.',
+    lang: 'bash',
+    code: `# Shutterfly's real migration journey:
+# - Started cloud migration 2018, chose AWS as strategic partner
+# - Evacuated colocated data center in 2021
+# - Migrated 2000 VMs → 1200 (40% reduction via right-sizing)
+# - 80% to ECS containers, 20% to EC2
+# - Now: 300 services across 40+ application suites
+#
+# Strangler Fig approach:
+# 1. Identify bounded context (Photos, Orders, Users, Print)
+# 2. Build new service in ECS behind same API gateway
+# 3. Route traffic gradually (canary deployment)
+# 4. Each service owns its data (no shared DB)
+# 5. Communicate via SQS/RabbitMQ events
+# 6. Decommission old code once traffic fully shifted
+#
+# Result: 25% cost reduction, zero high-severity incidents,
+# completed 6 months ahead of schedule`,
+  },
+  {
+    name: 'Tell me about a time you overcame a technical obstacle (Behavioral)',
+    diff: 'easy',
+    hint: 'STAR format. Focus on initiative, hands-on debugging, and communication with non-technical stakeholders.',
+    lang: 'bash',
+    code: `# STAR Framework (55% of Shutterfly interviews are behavioral):
+#
+# Situation: Production latency spike during peak photo season
+# Task: Identify root cause, fix within SLA, prevent recurrence
+# Action:
+#   - Checked Grafana dashboards → connection pool exhaustion
+#   - Traced to slow queries missing indexes on photos table
+#   - Added composite index (user_id, status, created_at)
+#   - Implemented connection pool monitoring in CloudWatch
+# Result:
+#   - P99 latency dropped from 3s to 200ms
+#   - Added alerting, documented runbook for team
+#   - Presented findings to non-technical PM and QA
+#
+# Key Shutterfly values to hit:
+# - "80-100% hands-on coding" → show you debug/code yourself
+# - "Strong initiative and follow-through"
+# - "Balancing multiple priorities effectively"
+# - "Explain technical designs to non-technical team members"`,
+  },
+  {
+    name: 'Describe your experience with AI-assisted development tools',
+    diff: 'easy',
+    hint: 'Claude Code, GitHub Copilot — explicitly listed in job req. Show practical workflow integration.',
+    lang: 'bash',
+    code: `# Job posting explicitly requires:
+# "Experience working with Claude Code, GitHub Copilot
+#  or other AI-assisted development tools"
+#
+# Practical answer framework:
+# 1. Code generation: boilerplate, CRUD, test scaffolding
+# 2. Code review: catch bugs, security issues, style violations
+# 3. Refactoring: extract methods, simplify complex logic
+# 4. Debugging: explain stack traces, suggest fixes
+# 5. Documentation: generate Javadoc, API docs, ADRs
+#
+# Key principles to emphasize:
+# - Always review AI output (don't blindly accept)
+# - AI excels at repetitive tasks → human focuses on design
+# - Pair with strong CI/CD as safety net
+# - Use for test generation to increase coverage
+#
+# Shutterfly context: Senior SWEs there use Claude Code
+# for "LLM-powered feature development" in production`,
+  },
+  {
+    name: 'How do you ensure code quality in a Kanban team?',
+    diff: 'easy',
+    hint: 'WIP limits, CI/CD pipeline, code reviews, Testcontainers, Definition of Done.',
+    lang: 'bash',
+    code: `# Shutterfly uses Kanban (mentioned in job posting):
+#
+# Quality practices:
+# 1. CI Pipeline: lint → unit tests → integration tests → build
+# 2. Code review: required PR approval before merge
+# 3. Testing pyramid:
+#    - Unit: JUnit 5 + Mockito (fast, isolated)
+#    - Integration: Testcontainers (real Postgres, LocalStack)
+#    - E2E: smoke tests post-deploy
+# 4. Kanban specifics:
+#    - WIP limits (max 2-3 items in progress per dev)
+#    - Definition of Done: tests pass, reviewed, docs updated
+#    - Continuous delivery (no sprint boundaries)
+# 5. Monitoring: alerts on error rates, latency (Grafana/Splunk)
+#
+# Collaboration emphasis:
+# "Ability to present and explain technical designs and
+#  business requirements to other team members"
+# → Regular demos to QA, BAs, PMs`,
+  },
+  {
+    name: 'Design a RESTful API for photo album management',
+    diff: 'medium',
+    hint: 'CRUD + pagination + proper HTTP verbs/status codes. Think about the photo upload sub-resource.',
+    lang: 'java',
+    code: `// RESTful API design for Shutterfly-like photo albums:
+// GET    /api/v1/albums?page=0&size=20       → 200 (paginated list)
+// GET    /api/v1/albums/{id}                 → 200 or 404
+// POST   /api/v1/albums                     → 201 + Location header
+// PUT    /api/v1/albums/{id}                → 200 or 404
+// DELETE /api/v1/albums/{id}                → 204 or 404
+// POST   /api/v1/albums/{id}/photos/upload  → 200 (returns presigned URL)
+// GET    /api/v1/albums/{id}/photos?page=0  → 200 (paginated photos)
+
+@GetMapping
+public ResponseEntity<Page<AlbumDto>> listAlbums(
+        @AuthenticationPrincipal User user,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size) {
+    Pageable pageable = PageRequest.of(page, size,
+        Sort.by("createdAt").descending());
+    return ResponseEntity.ok(
+        albumService.findByUser(user.getId(), pageable));
+}`,
+  },
+  {
+    name: 'How would you handle a production outage? (Behavioral)',
+    diff: 'medium',
+    hint: 'Incident response: detect (monitoring), mitigate, root cause, postmortem. Show ownership.',
+    lang: 'bash',
+    code: `# Incident Response Framework:
+#
+# 1. DETECT (Grafana/Splunk/AppDynamics alerts)
+#    - Error rate spike, latency increase, queue depth growing
+#
+# 2. MITIGATE (first priority = restore service)
+#    - Scale up ECS tasks if capacity issue
+#    - Roll back deployment if recent change
+#    - Circuit breaker to isolate failing dependency
+#
+# 3. ROOT CAUSE
+#    - Correlate timing with deployments, config changes
+#    - Check CloudWatch metrics, application logs
+#    - Database slow query log, connection pool stats
+#
+# 4. FIX & PREVENT
+#    - Deploy fix with hotfix branch
+#    - Add monitoring/alerting for the failure mode
+#    - Write postmortem (blameless) with action items
+#
+# Shutterfly context: "Zero high-severity incidents"
+# after their migration — they take reliability seriously`,
+  },
+  {
+    name: 'Explain Docker containerization and ECS deployment',
+    diff: 'medium',
+    hint: 'Shutterfly migrated 80% to ECS. Dockerfile → ECR → Task Definition → Service → ALB.',
+    lang: 'bash',
+    code: `# Shutterfly's ECS deployment pipeline:
+# 1. Developer pushes to main branch
+# 2. CI builds Docker image:
+FROM eclipse-temurin:21-jre-alpine
+COPY target/app.jar /app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+# 3. Push to ECR (Elastic Container Registry)
+# 4. Update ECS Task Definition with new image tag
+# 5. ECS Service performs rolling deployment:
+#    - Start new tasks with new image
+#    - Health check via ALB target group
+#    - Drain connections from old tasks
+#    - Terminate old tasks
+# 6. Auto-scaling: scale on CPU, memory, or ALB request count
+#
+# Key ECS concepts:
+# - Task Definition = container blueprint (image, CPU, memory, env vars)
+# - Service = ensures N tasks running, handles rolling deploys
+# - Cluster = logical grouping of services
+# - Fargate = serverless (no EC2 management)`,
+  },
+];
 
 // ---------------------------------------------------------------------------
-// Game Plan — 90 min across 39 problems (5 Easy, 25 Medium, 9 Hard)
+// Game Plan — Phone Screen → 2 Technical → Managerial (per Glassdoor)
 // ---------------------------------------------------------------------------
 
 export const shutterflyGamePlan: GamePlanConfig = {
   allocations: [
-    { label: 'Easy (5)', type: 'Easy Problems', minutes: 10, highlight: false },
-    { label: 'Medium (25)', type: 'Medium Problems', minutes: 50, highlight: true },
-    { label: 'Hard (9)', type: 'Hard Problems', minutes: 27, highlight: true },
-    { label: 'Review', type: 'Review & Edge Cases', minutes: 3, highlight: false },
+    { label: 'Phone Screen', type: 'Recruiter Call', minutes: 30, highlight: false },
+    { label: 'Technical Round 1', type: 'Java/Coding', minutes: 60, highlight: true },
+    { label: 'Technical Round 2', type: 'Architecture/System Design', minutes: 60, highlight: true },
+    { label: 'Managerial Round', type: 'Behavioral/Culture Fit', minutes: 45, highlight: false },
   ],
   strategies: [
     {
-      title: 'Time Strategy — 90 Minutes for 39 Problems',
+      title: 'Phone Screen — Pass the Gate',
       steps: [
-        'Skim all 39 problems first (2 min) — identify freebies and hard ones',
-        'Solve 5 Easy problems quickly (~2 min each = 10 min total)',
-        'Attack 25 Medium problems (~2 min each = 50 min total) — use pattern recognition',
-        'Attempt 9 Hard problems with remaining time (~3.3 min each = 30 min total)',
-        'If stuck on a Hard, skip and return — never spend >5 min on one problem',
-        'Reserve last 3 minutes for review and fixing edge cases',
+        'Lead with 3+ years Java/Spring Boot + AWS experience',
+        'Mention specific AWS services used (S3, SQS, ECS, Aurora)',
+        'Highlight hands-on coding (they want 80-100% coding time)',
+        'Reference AI tools experience early (Claude Code, Copilot)',
+        'Ask about team structure and which domain you would own',
       ],
-      highlightText: '~2.3 min average per problem — speed is critical',
+      highlightText: 'Glassdoor: 71% applied online → phone screen first',
     },
     {
-      title: 'Pattern Recognition Strategy',
+      title: 'Technical Round 1 — Java Programming (per Glassdoor)',
       steps: [
-        'Read problem → identify data structure (array, string, graph, tree)',
-        'Map to known pattern: two pointers, sliding window, DP, backtracking, stack',
-        'Write solution skeleton first, then fill in details',
-        'Test with the simplest example mentally before coding',
-        'Handle edge cases: empty input, single element, duplicates',
+        'Expect "Java programming questions in 2 rounds" (Glassdoor Jul 2024)',
+        'Prepare: Spring Boot REST, service layer, validation, error handling',
+        'Know JPA/Hibernate with PostgreSQL (Aurora)',
+        'Be ready for a live coding problem (LeetCode medium difficulty)',
+        'Top patterns: Binary Search, DP, Tree traversal, Union-Find',
+        'If stuck, talk through approach — they value communication',
+      ],
+      highlightText: 'Difficulty rated 2.71/5 — "medium complexity questions"',
+    },
+    {
+      title: 'Technical Round 2 — Architecture Focus (per Glassdoor)',
+      steps: [
+        'Glassdoor says "majorly focusing on architecture"',
+        'Know Shutterfly\'s real stack: ECS, S3, SQS, Aurora, OpenSearch',
+        'Design for scale: 80M users, 100k req/min, 75PB images',
+        'Discuss async patterns (SQS fan-out, RabbitMQ topic routing, DLQ)',
+        'Show domain service thinking (bounded contexts, event-driven)',
+        'Mention Terraform, CI/CD, Docker → ECS deployment pipeline',
       ],
     },
     {
-      title: 'Difficulty Tier Approach',
+      title: 'Managerial Round — Behavioral (55% of Shutterfly interviews)',
       steps: [
-        'Easy: direct implementation — hash map lookups, simple iterations, basic math',
-        'Medium: one key insight needed — identify the trick (DP state, pointer direction, window condition)',
-        'Hard: combine 2+ techniques — monotonic stack + math, DP + binary search, heap + sorting',
-        'If a Medium feels like a Hard, move on — come back with fresh eyes',
+        'Prepare 4-5 STAR stories matching Shutterfly values',
+        'Initiative: "80-100% hands-on coding" → show ownership',
+        'Communication: "Explain technical designs to non-technical members"',
+        'Prioritization: "Balancing multiple priorities effectively"',
+        'Collaboration: working with QA, BAs, PMs in Kanban flow',
+        'Questions to ask: team domain, LLM roadmap, Kanban workflow',
       ],
+      highlightText: 'Core values: Innovation, Passion, Integrity, Teamwork',
     },
   ],
   keywords: [
-    'two pointers',
-    'sliding window',
-    'dynamic programming',
-    'hash table',
-    'prefix sum',
-    'binary search',
-    'backtracking',
-    'monotonic stack',
-    'heap',
-    'greedy',
-    'math',
-    'combinatorics',
-    'string manipulation',
-    'interval DP',
-    'cyclic sort',
-    'expression parsing',
+    'Java',
+    'Spring Boot',
+    'Python',
+    'AWS ECS',
+    'S3',
+    'SQS',
+    'Aurora PostgreSQL',
+    'RabbitMQ',
+    'Docker',
+    'Terraform',
+    'microservices',
+    'REST API',
+    'GraphQL',
+    'OpenSearch',
+    'CloudFront',
+    'ElastiCache',
+    'Redis',
+    'CI/CD',
+    'Kanban',
+    'AI/LLM',
+    'Claude Code',
+    'domain services',
+    'event-driven',
   ],
 };

@@ -1,48 +1,79 @@
 ---
 import '../styles/global.css';
 
-const companies = [
+const interviews = [
   {
-    name: 'Bank of America',
-    href: '/bofa',
-    accent: '#012169',
-    description: 'HireVue OA — 90 min',
-    detail: 'Self-Intro + 2 Coding + Explanation Video + Fitment',
-  },
-  {
-    name: 'Allstate',
-    href: '/allstate',
-    accent: '#003DA5',
-    description: 'TDD & Pair Programming — 60 min',
-    detail: 'Recruiter Screen → Technical Coding → Pair Programming/TDD Round',
+    name: 'Wells Fargo',
+    href: '/wellsfargo',
+    accent: '#CD1409',
+    format: 'Phone → HackerRank → 2-3 Technical → Behavioral',
+    stack: ['Java', 'Spring Boot', 'React', 'Angular', 'Kafka', 'Azure', 'Docker'],
+    timer: 60,
+    difficulty: 'Medium',
   },
   {
     name: 'Shutterfly',
     href: '/shutterfly',
     accent: '#6B2D8B',
-    description: '39 Known Problems — 90 min',
-    detail: '5 Easy, 25 Medium, 9 Hard · Array, Hash Table, DP, String, Math',
+    format: 'Phone Screen → 2 Technical (Java + Architecture) → Managerial',
+    stack: ['Java', 'Spring Boot', 'Python', 'AWS', 'Aurora', 'RabbitMQ', 'ECS'],
+    timer: 60,
+    difficulty: 'Medium',
+  },
+  {
+    name: 'Chmura',
+    href: '/chmura',
+    accent: '#1B5E20',
+    format: 'Phone → Skills Test → Panel Interview',
+    stack: ['Angular', 'TypeScript', 'RxJS', 'Signals', 'Material', 'Vitest'],
+    timer: 60,
+    difficulty: 'Easy-Medium',
+  },
+  {
+    name: 'Bank of America',
+    href: '/bofa',
+    accent: '#012169',
+    format: 'HireVue OA — Self-Intro + 2 Coding + Video + Fitment',
+    stack: ['Java', 'Python', 'Arrays', 'DP', 'String', 'Trees'],
+    timer: 90,
+    difficulty: 'Medium',
+  },
+  {
+    name: 'Allstate',
+    href: '/allstate',
+    accent: '#003DA5',
+    format: 'Recruiter Screen → Technical Coding → Pair Programming/TDD',
+    stack: ['Java', 'TDD', 'JUnit', 'Pair Programming', 'Clean Code'],
+    timer: 60,
+    difficulty: 'Medium',
   },
   {
     name: "Lowe's",
     href: '/lowes',
     accent: '#004990',
-    description: '3 Technical Panels — 90 min',
-    detail: 'Java 8, Microservices/Kafka, Database · All Technical, No Behavioral',
+    format: '3 Back-to-Back Technical Panels — All Technical, No Behavioral',
+    stack: ['Java 8', 'Streams', 'Kafka', 'Microservices', 'SQL', 'Docker'],
+    timer: 90,
+    difficulty: 'Medium-Hard',
   },
   {
     name: 'Truist',
     href: '/truist',
     accent: '#532E8A',
-    description: 'Banking Domain Focus — 60 min',
-    detail: 'Java, SQL, Banking Domain · Recruiter Screen → Technical Interview(s)',
+    format: 'Recruiter Screen → Technical Interview(s) — Banking Focus',
+    stack: ['Java', 'SQL', 'Banking Domain', 'Spring Boot'],
+    timer: 60,
+    difficulty: 'Medium',
   },
+];
+
+const playbooks = [
   {
     name: 'Infosys',
     href: '/infosys',
     accent: '#007CC3',
-    description: 'Full-Stack Knowledge Base',
-    detail: 'Java · Spring · SQL · React · HTTP · Cloud · Coding · Git',
+    description: 'Full-stack knowledge base covering Java, Spring, SQL, React, HTTP, Cloud, Coding, and Git. No timer — use as a reference.',
+    topics: ['Java', 'Spring', 'SQL', 'React', 'HTTP', 'Cloud', 'Coding', 'Git'],
   },
 ];
 ---
@@ -51,7 +82,7 @@ const companies = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Company Cheatsheets</title>
+    <title>Interview Prep — Cheatsheets</title>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -60,119 +91,297 @@ const companies = [
   </head>
   <body>
     <div class="root landing">
-      <header class="landing-header">
+      <!-- Hero -->
+      <header class="hero">
+        <div class="hero-badge">🎯 {interviews.length} Companies · {playbooks.length} Playbook</div>
         <h1>Interview Cheatsheets</h1>
-        <p>Company-specific interview preparation guides</p>
+        <p class="hero-sub">Tabbed, searchable, single-page references with code patterns, likely questions, and game plans.</p>
       </header>
 
-      <div class="company-grid">
-        {companies.map((company) => (
-          <a href={company.href} class="company-card" style={`--card-accent: ${company.accent};`}>
-            <div class="company-card-accent" />
-            <div class="company-card-body">
-              <h2>{company.name}</h2>
-              <p class="company-desc">{company.description}</p>
-              <p class="company-detail">{company.detail}</p>
+      <!-- Interview Prep Cards -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Interview Prep</h2>
+          <span class="section-badge">{interviews.length} companies</span>
+        </div>
+
+        <div class="interview-grid">
+          {interviews.map((company) => (
+            <a href={company.href} class="interview-card" style={`--card-accent: ${company.accent};`}>
+              <div class="card-top">
+                <span class="card-name">{company.name}</span>
+                <span class="card-timer">{company.timer} min</span>
+              </div>
+              <p class="card-format">{company.format}</p>
+              <div class="card-tags">
+                {company.stack.slice(0, 5).map(tag => (
+                  <span class="tag">{tag}</span>
+                ))}
+                {company.stack.length > 5 && <span class="tag tag-more">+{company.stack.length - 5}</span>}
+              </div>
+              <div class="card-footer">
+                <span class="card-difficulty">{company.difficulty}</span>
+                <span class="card-arrow">→</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- Playbooks Section -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Playbooks</h2>
+          <span class="section-badge">Reference guides</span>
+        </div>
+
+        {playbooks.map((book) => (
+          <a href={book.href} class="playbook-card" style={`--card-accent: ${book.accent};`}>
+            <div class="playbook-left">
+              <span class="playbook-icon">📖</span>
             </div>
-            <div class="company-card-arrow">→</div>
+            <div class="playbook-body">
+              <h3>{book.name}</h3>
+              <p>{book.description}</p>
+              <div class="card-tags">
+                {book.topics.map(t => <span class="tag">{t}</span>)}
+              </div>
+            </div>
+            <div class="playbook-arrow">→</div>
           </a>
         ))}
-      </div>
+      </section>
     </div>
 
     <style>
-      .landing-header {
+      /* Hero */
+      .hero {
         text-align: center;
-        margin-bottom: 2.5rem;
-        padding-top: 1rem;
+        padding: 2.5rem 1rem 2rem;
       }
 
-      .landing-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--color-text-primary);
-        margin-bottom: 6px;
-      }
-
-      .landing-header p {
-        font-size: 14px;
+      .hero-badge {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 500;
         color: var(--color-text-secondary);
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-tertiary);
+        border-radius: 20px;
+        padding: 4px 14px;
+        margin-bottom: 12px;
       }
 
-      .company-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        gap: 16px;
+      .hero h1 {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--color-text-primary);
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
       }
 
-      .company-card {
+      .hero-sub {
+        font-size: 15px;
+        color: var(--color-text-secondary);
+        max-width: 520px;
+        margin: 0 auto;
+        line-height: 1.5;
+      }
+
+      /* Sections */
+      .section {
+        margin-bottom: 2.5rem;
+      }
+
+      .section-header {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 10px;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--color-border-tertiary);
+      }
+
+      .section-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+      }
+
+      .section-badge {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-text-tertiary);
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-tertiary);
+        border-radius: 12px;
+        padding: 2px 10px;
+      }
+
+      /* Interview Grid */
+      .interview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 14px;
+      }
+
+      .interview-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
         background: var(--color-background-primary);
         border: 1px solid var(--color-border-tertiary);
         border-radius: var(--border-radius-lg);
-        padding: 1.25rem 1.5rem;
+        padding: 1.25rem;
         text-decoration: none;
         color: inherit;
-        transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+        border-left: 5px solid var(--card-accent);
+        transition: box-shadow 0.15s, transform 0.15s;
       }
 
-      .company-card:hover {
-        border-color: var(--card-accent);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      .interview-card:hover {
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
         transform: translateY(-2px);
       }
 
-      .company-card-accent {
-        width: 4px;
-        height: 48px;
-        border-radius: 2px;
-        background: var(--card-accent);
-        flex-shrink: 0;
+      .card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
 
-      .company-card-body {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .company-card-body h2 {
+      .card-name {
         font-size: 16px;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--color-text-primary);
-        margin-bottom: 4px;
       }
 
-      .company-desc {
-        font-size: 13px;
-        font-weight: 500;
+      .card-timer {
+        font-size: 11px;
+        font-weight: 600;
         color: var(--card-accent);
-        margin-bottom: 2px;
+        background: color-mix(in srgb, var(--card-accent) 8%, transparent);
+        border-radius: 6px;
+        padding: 3px 8px;
       }
 
-      .company-detail {
-        font-size: 12px;
-        color: var(--color-text-tertiary);
+      .card-format {
+        font-size: 12.5px;
+        color: var(--color-text-secondary);
         line-height: 1.4;
       }
 
-      .company-card-arrow {
-        font-size: 18px;
-        color: var(--color-text-tertiary);
-        transition: color 0.15s, transform 0.15s;
-        flex-shrink: 0;
+      .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
       }
 
-      .company-card:hover .company-card-arrow {
+      .tag {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        background: var(--color-background-secondary);
+        border-radius: 4px;
+        padding: 2px 7px;
+      }
+
+      .tag-more {
+        color: var(--color-text-tertiary);
+        font-style: italic;
+      }
+
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 6px;
+      }
+
+      .card-difficulty {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-text-tertiary);
+      }
+
+      .card-arrow {
+        font-size: 18px;
+        font-weight: 300;
+        color: var(--color-text-tertiary);
+        transition: color 0.15s, transform 0.15s;
+      }
+
+      .interview-card:hover .card-arrow {
         color: var(--card-accent);
         transform: translateX(3px);
       }
 
+      /* Playbook Card */
+      .playbook-card {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg);
+        padding: 1.5rem;
+        text-decoration: none;
+        color: inherit;
+        transition: box-shadow 0.15s, transform 0.15s;
+      }
+
+      .playbook-card:hover {
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+      }
+
+      .playbook-left {
+        font-size: 32px;
+        flex-shrink: 0;
+      }
+
+      .playbook-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .playbook-body h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 4px;
+      }
+
+      .playbook-body p {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        margin-bottom: 10px;
+        line-height: 1.4;
+      }
+
+      .playbook-arrow {
+        font-size: 20px;
+        color: var(--color-text-tertiary);
+        flex-shrink: 0;
+        transition: color 0.15s, transform 0.15s;
+      }
+
+      .playbook-card:hover .playbook-arrow {
+        color: var(--card-accent);
+        transform: translateX(3px);
+      }
+
+      /* Responsive */
       @media (max-width: 768px) {
-        .company-grid {
-          grid-template-columns: 1fr;
-        }
+        .hero h1 { font-size: 26px; }
+        .interview-grid { grid-template-columns: 1fr; }
+        .playbook-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        .playbook-arrow { display: none; }
+      }
+
+      @media (min-width: 1200px) {
+        .interview-grid { grid-template-columns: repeat(3, 1fr); }
       }
     </style>
   </body>

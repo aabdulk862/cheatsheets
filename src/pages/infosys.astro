@@ -11,11 +11,28 @@ const sorted = topics.sort((a, b) => a.data.order - b.data.order);
 
 const tabs: TabConfig[] = sorted.map(t => ({ id: t.id, label: t.data.title }));
 
-/**
- * Parse rendered HTML content into Q&A sections by splitting on H1 headings.
- * Each H1 becomes the question, and everything between that H1 and the next H1
- * (or end of content) becomes the answer body.
- */
+const topicIcons: Record<string, string> = {
+  java: '☕',
+  spring: '🌱',
+  sql: '🗄️',
+  'react-frontend': '⚛️',
+  http: '🌐',
+  'cloud-sdlc': '☁️',
+  coding: '💻',
+  git: '🔀',
+};
+
+const topicColors: Record<string, string> = {
+  java: '#E76F00',
+  spring: '#6DB33F',
+  sql: '#336791',
+  'react-frontend': '#61DAFB',
+  http: '#4A90D9',
+  'cloud-sdlc': '#FF9900',
+  coding: '#E91E63',
+  git: '#F05032',
+};
+
 function decodeHtmlEntities(text: string): string {
   return text
     .replace(/&#x26;/g, '&')
@@ -33,45 +50,35 @@ function decodeHtmlEntities(text: string): string {
 
 function parseQASections(html: string): { question: string; answer: string }[] {
   const sections: { question: string; answer: string }[] = [];
-
   const h1Regex = /<h1[^>]*>(.*?)<\/h1>/gi;
   const matches = [...html.matchAll(h1Regex)];
-
   if (matches.length === 0) return sections;
-
   for (let i = 0; i < matches.length; i++) {
     const rawQuestion = matches[i][1].replace(/<[^>]+>/g, '').trim();
     const question = decodeHtmlEntities(rawQuestion);
     const startIdx = matches[i].index! + matches[i][0].length;
     const endIdx = i + 1 < matches.length ? matches[i + 1].index! : html.length;
     const answer = html.slice(startIdx, endIdx).trim();
-    if (question) {
-      sections.push({ question, answer });
-    }
+    if (question) sections.push({ question, answer });
   }
-
   return sections;
 }
 
-// Pre-render all topics and extract their HTML sections
 const topicData = await Promise.all(
   sorted.map(async (entry) => {
     await render(entry);
     const rawHtml = entry.rendered?.html || '';
     const sections = parseQASections(rawHtml);
-    return {
-      id: entry.id,
-      title: entry.data.title,
-      sections,
-    };
+    return { id: entry.id, title: entry.data.title, sections };
   })
 );
 
-const title = "Infosys Playbook — Full-Stack Interview Knowledge Base";
-const subtitle = "Java · Spring · SQL · React · HTTP · Cloud · Coding · Git";
+const title = "Infosys Playbook";
+const subtitle = "Full-Stack Interview Knowledge Base";
 const accentColor = "#007CC3";
 const accentSecondary = "#00A5E3";
 const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${accentSecondary};`;
+const totalQuestions = topicData.reduce((sum, t) => sum + t.sections.length, 0);
 ---
 
 <!DOCTYPE html>
@@ -87,21 +94,76 @@ const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${a
     <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body style={bodyStyle}>
-    <div class="root">
+    <div class="root playbook-root">
       <nav class="breadcrumb">
-        <a href="/" class="back-link">← All Cheatsheets</a>
+        <a href="/" class="back-link">← Home</a>
       </nav>
 
-      <header class="header">
-        <div class="header-left">
+      <!-- Playbook Header -->
+      <header class="playbook-header">
+        <div class="playbook-header-content">
+          <span class="playbook-badge">📖 Playbook</span>
           <h1>{title}</h1>
-          <p>{subtitle}</p>
-        </div>
-        <div class="header-right">
-          <!-- No Timer for Infosys page -->
+          <p class="playbook-subtitle">{subtitle}</p>
+          <div class="playbook-stats">
+            <span class="stat">{topicData.length} Topics</span>
+            <span class="stat-sep">·</span>
+            <span class="stat">{totalQuestions} Questions</span>
+            <span class="stat-sep">·</span>
+            <span class="stat">No Timer</span>
+          </div>
         </div>
       </header>
 
+      <!-- Architecture Diagrams Section -->
+      <section class="diagrams-section">
+        <h2 class="diagrams-title">Quick Reference Diagrams</h2>
+        <div class="diagrams-grid">
+          <div class="diagram-card">
+            <h3>☕ JDK vs JRE vs JVM</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/jdk-jre-jvm.png" alt="JDK JRE JVM nested relationship diagram" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>☕ Java Memory Model</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/java-memory.png" alt="Java JVM Memory Model - Stack and Heap" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>🌱 Spring Boot Architecture</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/spring-boot.png" alt="Spring Boot layered architecture diagram" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>🏗️ Microservices Architecture</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/microservices.png" alt="Microservices architecture with API Gateway, services, and message queue" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>📡 REST API Methods</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/rest-methods.png" alt="REST HTTP methods GET POST PUT PATCH DELETE with response codes" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>🌐 HTTP Request Structure</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/http-request.svg" alt="HTTP request structure diagram" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>⚛️ React Hooks Lifecycle</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/react-lifecycle.jpg" alt="React hooks lifecycle diagram" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>🗄️ SQL Joins</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/sql-joins.svg" alt="SQL join types Venn diagram" /></div>
+          </div>
+          <div class="diagram-card">
+            <h3>🔀 Git Workflow</h3>
+            <div class="diagram-img-wrap"><img src="/diagrams/git-areas.png" alt="Git working directory, staging area, and repository" /></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lightbox -->
+      <div class="lightbox" id="lightbox">
+        <img src="" alt="" />
+      </div>
+
+      <!-- Search -->
       <SearchFilter
         client:load
         targetSelector=".question-card, .qa-card"
@@ -109,8 +171,10 @@ const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${a
         scope="all-panels"
       />
 
+      <!-- Topic Tabs -->
       <TabNavigation tabs={tabs} />
 
+      <!-- Topic Panels -->
       {topicData.map((topic, index) => (
         <div
           id={`panel-${topic.id}`}
@@ -118,11 +182,248 @@ const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${a
           role="tabpanel"
           aria-labelledby={`tab-${topic.id}`}
         >
+          <div class="topic-header" style={`--topic-color: ${topicColors[topic.id] || accentColor};`}>
+            <span class="topic-icon">{topicIcons[topic.id] || '📄'}</span>
+            <div>
+              <h2 class="topic-title">{topic.title}</h2>
+              <span class="topic-count">{topic.sections.length} questions</span>
+            </div>
+          </div>
           {topic.sections.map(({ question, answer }) => (
             <QACard question={question} answer={answer} />
           ))}
         </div>
       ))}
     </div>
+
+    <style>
+      .playbook-root {
+        max-width: 1100px;
+      }
+
+      /* Playbook Header */
+      .playbook-header {
+        background: linear-gradient(135deg, #007CC3 0%, #00A5E3 100%);
+        border-radius: var(--border-radius-lg);
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        color: white;
+      }
+
+      .playbook-header-content {
+        max-width: 600px;
+      }
+
+      .playbook-badge {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 4px 12px;
+        margin-bottom: 12px;
+      }
+
+      .playbook-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        letter-spacing: -0.3px;
+      }
+
+      .playbook-subtitle {
+        font-size: 15px;
+        opacity: 0.9;
+        margin-bottom: 16px;
+      }
+
+      .playbook-stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        opacity: 0.85;
+      }
+
+      .stat {
+        font-weight: 500;
+      }
+
+      .stat-sep {
+        opacity: 0.5;
+      }
+
+      /* Diagrams Section */
+      .diagrams-section {
+        margin-bottom: 2rem;
+      }
+
+      .diagrams-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--color-border-tertiary);
+      }
+
+      .diagrams-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .diagram-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        min-width: 0;
+        cursor: pointer;
+        transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+      }
+
+      .diagram-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+        border-color: var(--color-accent);
+      }
+
+      .diagram-card h3 {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        padding: 0.6rem 0.75rem 0;
+        margin: 0;
+      }
+
+      .diagram-card .diagram-img-wrap {
+        position: relative;
+        padding: 0.5rem 0.75rem 0.75rem;
+      }
+
+      .diagram-card .diagram-img-wrap::after {
+        content: "⤢";
+        position: absolute;
+        bottom: 0.75rem;
+        right: 0.75rem;
+        font-size: 14px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+
+      .diagram-card:hover .diagram-img-wrap::after {
+        opacity: 1;
+      }
+
+      .diagram-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: contain;
+        display: block;
+        border-radius: 4px;
+        background: #fff;
+      }
+
+      /* Lightbox */
+      .lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0,0,0,0.9);
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        cursor: zoom-out;
+        backdrop-filter: blur(4px);
+      }
+
+      .lightbox.open {
+        display: flex;
+      }
+
+      .lightbox img {
+        max-width: 92vw;
+        max-height: 92vh;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #fff;
+        padding: 1rem;
+      }
+
+      /* Topic Headers */
+      .topic-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 1rem 1.25rem;
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-tertiary);
+        border-left: 4px solid var(--topic-color);
+        border-radius: var(--border-radius-lg);
+        margin-bottom: 1rem;
+      }
+
+      .topic-icon {
+        font-size: 28px;
+      }
+
+      .topic-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--color-text-primary);
+      }
+
+      .topic-count {
+        font-size: 12px;
+        color: var(--color-text-tertiary);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .playbook-header { padding: 1.5rem 1.25rem; }
+        .playbook-header h1 { font-size: 22px; }
+        .diagrams-grid { grid-template-columns: 1fr; }
+        .diagram-card img { height: 200px; }
+        .diagram-card .diagram-img-wrap { padding: 0.4rem; }
+      }
+
+      @media (min-width: 1100px) {
+        .diagrams-grid { grid-template-columns: repeat(3, 1fr); }
+        .diagram-card img { height: 200px; }
+      }
+    </style>
+    <script>
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = lightbox.querySelector('img');
+
+      document.querySelectorAll('.diagram-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const img = card.querySelector('img');
+          lightboxImg.src = img.src;
+          lightboxImg.alt = img.alt;
+          lightbox.classList.add('open');
+        });
+      });
+
+      lightbox.addEventListener('click', () => {
+        lightbox.classList.remove('open');
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') lightbox.classList.remove('open');
+      });
+    </script>
   </body>
 </html>
