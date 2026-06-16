@@ -152,14 +152,14 @@ export const wellsFargoExtras = {
 export const shutterflyExtras = {
   systemDesign: [notificationSystemDesign, batchProcessingDesign, deploymentDesign],
   intro: {
-    selfIntro: "Hi, I'm Adam. I work on a distributed communications platform — 40+ Java 21 microservices handling millions of messages daily on AWS EKS. I've extracted services from monoliths, debugged production incidents at scale, and identified architectural risks proactively. I'm drawn to Shutterfly because of the engineering scale — 300 services, 75 petabytes, 100K req/min — and the opportunity to work on systems that serve 80 million users.",
+    selfIntro: "Hi, I'm Adam. I'm a software engineer at Infosys supporting Charter Communications' customer communications platform — 40+ Java 21 microservices handling millions of messages daily across SMS, Email, RCS, and IVR on AWS EKS. I've fixed production bugs dropping 16,000 messages per hour, designed cross-service error systems used by our BI team, extracted microservices from monoliths, and built AI-augmented engineering workflows using LLMs with structured context. I'm excited about Shutterfly because of the engineering scale and the emphasis on AI tooling in the JD — that's something I've already operationalized.",
     whyCompany: [
-      '300 services across 40+ app suites mirrors the 40+ microservices I work on',
-      'AWS-heavy infrastructure (ECS, S3, Aurora) aligns with my EKS/S3/Pinpoint expertise',
-      'High-throughput challenges (100K req/min) match my batch processing experience (millions/day)',
-      'Service decomposition and architecture evolution is something I\'ve done hands-on',
+      'Engineering scale mirrors my work — 300 services at Shutterfly vs 40+ at Charter',
+      'AI/LLM emphasis in the JD aligns with my verified knowledge base and steering files for code generation',
+      'AWS infrastructure (ECS, S3, SQS) maps directly to my EKS/S3/Pinpoint experience',
+      'Principal Engineer panel suggests they value depth over breadth — I can go deep on production systems',
     ],
-    closingStatement: "I've operated microservices at enterprise scale, extracted services from monoliths, and identified stability risks before they became incidents. I'd bring that production-hardened perspective to Shutterfly's engineering challenges.",
+    closingStatement: "I bring enterprise-scale production experience — not CRUD apps. I've owned services, resolved incidents affecting 16,000 customers per hour, coordinated cross-team features, and operationalized AI tools for engineering productivity. I'd love to bring that perspective to Shutterfly.",
   } as IntroPanelConfig,
   storyRoutes: sharedRoutes,
 };
