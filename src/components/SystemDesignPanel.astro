@@ -1,0 +1,45 @@
+---
+import type { SystemDesignTopic } from '../data/types';
+
+interface Props { topics: SystemDesignTopic[] }
+const { topics } = Astro.props;
+---
+
+<div class="sd-panel">
+  {topics.map(t => (
+    <div class="sd-card">
+      <div class="sd-header">
+        <span class="sd-title">{t.title}</span>
+        <span class="sd-prompt">"{t.prompt}"</span>
+      </div>
+      <div class="mermaid" set:html={t.mermaid} />
+      <div class="sd-concepts">
+        {t.concepts.map(c => <span class="kw">{c}</span>)}
+      </div>
+      <div class="sd-tp">
+        <strong>Say:</strong> "{t.talkingPoint}"
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .sd-panel { display: flex; flex-direction: column; gap: 16px; }
+  .sd-card {
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem;
+  }
+  .sd-header { margin-bottom: 12px; }
+  .sd-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); display: block; }
+  .sd-prompt { font-size: 11px; color: var(--color-text-tertiary); font-style: italic; }
+  .sd-concepts { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .sd-tp {
+    font-size: 12px; color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 8px 12px; line-height: 1.5;
+    border-left: 3px solid var(--color-accent);
+  }
+</style>

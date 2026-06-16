@@ -1,0 +1,39 @@
+---
+import type { IntroPanelConfig } from '../data/types';
+
+interface Props extends IntroPanelConfig {}
+const { selfIntro, whyCompany, closingStatement } = Astro.props;
+---
+
+<div class="intro-panel">
+  <div class="section-label">30-Second Self-Intro</div>
+  <div class="intro-card intro-script">{selfIntro}</div>
+
+  <div class="section-label">Why This Company</div>
+  <div class="intro-card">
+    <ul class="why-list">
+      {whyCompany.map(w => <li>{w}</li>)}
+    </ul>
+  </div>
+
+  <div class="section-label">Closing Statement</div>
+  <div class="intro-card intro-script">{closingStatement}</div>
+</div>
+
+<style>
+  .intro-panel { display: flex; flex-direction: column; gap: 12px; }
+  .intro-card {
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem;
+  }
+  .intro-script {
+    font-size: 14px; line-height: 1.7; color: var(--color-text-primary);
+    border-left: 3px solid var(--color-accent);
+  }
+  .why-list {
+    padding-left: 1.25rem; font-size: 13px;
+    color: var(--color-text-secondary); line-height: 1.8;
+  }
+</style>

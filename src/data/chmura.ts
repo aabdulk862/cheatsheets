@@ -27,6 +27,10 @@ export const chmuraConfig: CompanyConfig = {
     { id: 'ui', label: 'Data UI Patterns' },
     { id: 'questions', label: 'Likely Questions' },
     { id: 'plan', label: 'Game Plan' },
+    { id: 'experience', label: 'My Experience' },
+    { id: 'design', label: 'System Design' },
+    { id: 'intro', label: 'Intro/Why' },
+    { id: 'stories', label: 'Story Router' },
   ],
 };
 

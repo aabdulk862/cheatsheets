@@ -65,3 +65,58 @@ export interface GamePlanConfig {
   strategies: StrategyCard[];
   keywords: string[];              // 6–20 topic terms
 }
+
+/** Experience mapping — a topic matched to real work evidence */
+export interface ExperienceMapping {
+  topic: string;
+  level: 'expert' | 'proficient' | 'familiar';
+  evidence: string[];
+  talkingPoint: string;
+}
+
+/** Behavioral story in STAR format */
+export interface BehavioralStory {
+  title: string;
+  prompt: string;
+  situation: string;
+  task: string;
+  action: string;
+  result: string;
+}
+
+/** Gap analysis entry */
+export interface GapEntry {
+  topic: string;
+  status: 'strong' | 'partial' | 'weak';
+  note?: string;
+}
+
+/** Full experience panel config for a company */
+export interface ExperiencePanelConfig {
+  mappings: ExperienceMapping[];
+  stories: BehavioralStory[];
+  gaps: GapEntry[];
+}
+
+/** System design topic with Mermaid diagram */
+export interface SystemDesignTopic {
+  title: string;
+  prompt: string;
+  mermaid: string;
+  concepts: string[];
+  talkingPoint: string;
+}
+
+/** Self-intro and why-company scripts */
+export interface IntroPanelConfig {
+  selfIntro: string;
+  whyCompany: string[];
+  closingStatement: string;
+}
+
+/** Prompt-to-story mapping */
+export interface StoryRoute {
+  prompt: string;
+  storyTitle: string;
+  oneLiner: string;
+}

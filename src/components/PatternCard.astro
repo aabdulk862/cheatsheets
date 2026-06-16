@@ -17,7 +17,10 @@ const { title, lang, description, code, metaTags } = Astro.props;
     <span class={`badge badge-${lang}`}>{lang}</span>
   </div>
   <div class="card-desc">{description}</div>
-  <Code code={code} lang={lang} theme="github-dark" />
+  <div class="code-wrapper">
+    <button class="code-fs-btn" aria-label="Fullscreen code" title="Fullscreen">⛶</button>
+    <Code code={code} lang={lang} theme="github-dark" />
+  </div>
   <div class="meta">
     {metaTags.map((tag) => (
       <span class="meta-item">{tag}</span>

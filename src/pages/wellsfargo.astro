@@ -3,7 +3,13 @@ import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
 import PatternCard from '../components/PatternCard.astro';
 import QuestionCard from '../components/QuestionCard.astro';
 import GamePlanPanel from '../components/GamePlanPanel.astro';
+import MappingPanel from '../components/MappingPanel.astro';
+import SystemDesignPanel from '../components/SystemDesignPanel.astro';
+import IntroPanel from '../components/IntroPanel.astro';
+import StoryRouter from '../components/StoryRouter.astro';
 import { wellsFargoConfig, wellsFargoJavaPatterns, wellsFargoFrontendPatterns, wellsFargoInfraPatterns, wellsFargoQuestions, wellsFargoGamePlan } from '../data/wellsfargo';
+import { wellsFargoExperience } from '../data/experience-wellsfargo';
+import { wellsFargoExtras } from '../data/interview-extras';
 ---
 
 <CheatsheetLayout
@@ -54,5 +60,21 @@ import { wellsFargoConfig, wellsFargoJavaPatterns, wellsFargoFrontendPatterns, w
 
   <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
     <GamePlanPanel {...wellsFargoGamePlan} />
+  </div>
+
+  <div id="panel-experience" class="panel" role="tabpanel" aria-labelledby="tab-experience">
+    <MappingPanel {...wellsFargoExperience} />
+  </div>
+
+  <div id="panel-design" class="panel" role="tabpanel" aria-labelledby="tab-design">
+    <SystemDesignPanel topics={wellsFargoExtras.systemDesign} />
+  </div>
+
+  <div id="panel-intro" class="panel" role="tabpanel" aria-labelledby="tab-intro">
+    <IntroPanel {...wellsFargoExtras.intro} />
+  </div>
+
+  <div id="panel-stories" class="panel" role="tabpanel" aria-labelledby="tab-stories">
+    <StoryRouter routes={wellsFargoExtras.storyRoutes} />
   </div>
 </CheatsheetLayout>

@@ -3,7 +3,13 @@ import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
 import PatternCard from '../components/PatternCard.astro';
 import QuestionCard from '../components/QuestionCard.astro';
 import GamePlanPanel from '../components/GamePlanPanel.astro';
+import MappingPanel from '../components/MappingPanel.astro';
+import SystemDesignPanel from '../components/SystemDesignPanel.astro';
+import IntroPanel from '../components/IntroPanel.astro';
+import StoryRouter from '../components/StoryRouter.astro';
 import { chmuraConfig, chmuraAngularPatterns, chmuraRxjsPatterns, chmuraUiPatterns, chmuraQuestions, chmuraGamePlan } from '../data/chmura';
+import { chmuraExperience } from '../data/experience-chmura';
+import { chmuraExtras } from '../data/interview-extras';
 ---
 
 <CheatsheetLayout
@@ -54,5 +60,21 @@ import { chmuraConfig, chmuraAngularPatterns, chmuraRxjsPatterns, chmuraUiPatter
 
   <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
     <GamePlanPanel {...chmuraGamePlan} />
+  </div>
+
+  <div id="panel-experience" class="panel" role="tabpanel" aria-labelledby="tab-experience">
+    <MappingPanel {...chmuraExperience} />
+  </div>
+
+  <div id="panel-design" class="panel" role="tabpanel" aria-labelledby="tab-design">
+    <SystemDesignPanel topics={chmuraExtras.systemDesign} />
+  </div>
+
+  <div id="panel-intro" class="panel" role="tabpanel" aria-labelledby="tab-intro">
+    <IntroPanel {...chmuraExtras.intro} />
+  </div>
+
+  <div id="panel-stories" class="panel" role="tabpanel" aria-labelledby="tab-stories">
+    <StoryRouter routes={chmuraExtras.storyRoutes} />
   </div>
 </CheatsheetLayout>

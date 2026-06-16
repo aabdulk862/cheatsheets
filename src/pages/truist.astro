@@ -3,7 +3,13 @@ import CheatsheetLayout from '../layouts/CheatsheetLayout.astro';
 import PatternCard from '../components/PatternCard.astro';
 import QuestionCard from '../components/QuestionCard.astro';
 import GamePlanPanel from '../components/GamePlanPanel.astro';
+import MappingPanel from '../components/MappingPanel.astro';
+import SystemDesignPanel from '../components/SystemDesignPanel.astro';
+import IntroPanel from '../components/IntroPanel.astro';
+import StoryRouter from '../components/StoryRouter.astro';
 import { truistConfig, truistJavaSqlPatterns, truistBankingPatterns, truistQuestions, truistGamePlan } from '../data/truist';
+import { truistExperience } from '../data/experience-truist';
+import { truistExtras } from '../data/interview-extras';
 ---
 
 <CheatsheetLayout
@@ -42,5 +48,21 @@ import { truistConfig, truistJavaSqlPatterns, truistBankingPatterns, truistQuest
 
   <div id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
     <GamePlanPanel {...truistGamePlan} />
+  </div>
+
+  <div id="panel-experience" class="panel" role="tabpanel" aria-labelledby="tab-experience">
+    <MappingPanel {...truistExperience} />
+  </div>
+
+  <div id="panel-design" class="panel" role="tabpanel" aria-labelledby="tab-design">
+    <SystemDesignPanel topics={truistExtras.systemDesign} />
+  </div>
+
+  <div id="panel-intro" class="panel" role="tabpanel" aria-labelledby="tab-intro">
+    <IntroPanel {...truistExtras.intro} />
+  </div>
+
+  <div id="panel-stories" class="panel" role="tabpanel" aria-labelledby="tab-stories">
+    <StoryRouter routes={truistExtras.storyRoutes} />
   </div>
 </CheatsheetLayout>

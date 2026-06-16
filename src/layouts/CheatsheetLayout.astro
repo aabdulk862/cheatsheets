@@ -39,6 +39,20 @@ const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${a
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="manifest" href="/site.webmanifest" />
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+
+      function renderVisible() {
+        const nodes = document.querySelectorAll('.panel.active .mermaid:not([data-processed])');
+        if (nodes.length) mermaid.run({ nodes: [...nodes] });
+      }
+
+      renderVisible();
+      document.querySelector('[role="tablist"]')?.addEventListener('click', () => {
+        setTimeout(renderVisible, 50);
+      });
+    </script>
   </head>
   <body style={bodyStyle}>
     <div class="root">
@@ -55,6 +69,16 @@ const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${a
           {timerMinutes && (
             <Timer client:load durationMinutes={timerMinutes} />
           )}
+          <button class="fullscreen-btn" id="fullscreen-toggle" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+            <svg class="fs-icon-enter" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="10,2 14,2 14,6" /><polyline points="6,14 2,14 2,10" />
+              <line x1="14" y1="2" x2="10" y2="6" /><line x1="2" y1="14" x2="6" y2="10" />
+            </svg>
+            <svg class="fs-icon-exit" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none;">
+              <polyline points="14,6 10,6 10,2" /><polyline points="2,10 6,10 6,14" />
+              <line x1="10" y1="6" x2="14" y2="2" /><line x1="6" y1="10" x2="2" y2="14" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -71,5 +95,59 @@ const bodyStyle = `--color-accent: ${accentColor}; --color-accent-secondary: ${a
 
       <slot />
     </div>
+
+    <style>
+      .fullscreen-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: var(--color-background-primary);
+        border: 1px solid var(--color-border-secondary);
+        border-radius: var(--border-radius-md);
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .fullscreen-btn:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+    </style>
+
+    <script>
+      const btn = document.getElementById('fullscreen-toggle')!;
+      const iconEnter = btn.querySelector('.fs-icon-enter') as HTMLElement;
+      const iconExit = btn.querySelector('.fs-icon-exit') as HTMLElement;
+
+      function updateIcon() {
+        const isFs = !!document.fullscreenElement;
+        iconEnter.style.display = isFs ? 'none' : 'block';
+        iconExit.style.display = isFs ? 'block' : 'none';
+      }
+
+      btn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      document.addEventListener('fullscreenchange', updateIcon);
+
+      // Code block fullscreen
+      document.querySelectorAll('.code-fs-btn').forEach((b) => {
+        b.addEventListener('click', () => {
+          const wrapper = b.closest('.code-wrapper')!;
+          if (!document.fullscreenElement) {
+            wrapper.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+        });
+      });
+    </script>
   </body>
 </html>

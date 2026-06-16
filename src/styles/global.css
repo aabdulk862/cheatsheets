@@ -257,6 +257,8 @@ body {
   border-radius: var(--border-radius-lg);
   padding: 1rem 1.25rem;
   transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .pattern-card:hover {
@@ -512,6 +514,8 @@ pre {
   margin: 0;
   border-radius: 0;
   border: none;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 pre code,
@@ -524,6 +528,57 @@ pre .astro-code {
   tab-size: 4;
   overflow-x: auto;
   display: block;
+}
+
+/* ===== Code Fullscreen Wrapper ===== */
+.code-wrapper {
+  position: relative;
+}
+
+.code-fs-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.code-fs-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.code-wrapper:fullscreen {
+  background: #24292e;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-wrapper:fullscreen pre,
+.code-wrapper:fullscreen pre code,
+.code-wrapper:fullscreen pre .astro-code {
+  height: 100%;
+  max-width: none;
+  overflow: auto;
+  font-size: 15px;
+}
+
+.code-wrapper:fullscreen .code-fs-btn {
+  opacity: 1;
+  position: fixed;
+  top: 12px;
+  right: 12px;
 }
 
 /* ===== Meta Tags ===== */
@@ -546,13 +601,13 @@ pre .astro-code {
 /* ===== Grids ===== */
 .pattern-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
   gap: 12px;
 }
 
 .strategy-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -786,11 +841,24 @@ pre .astro-code {
 
   .tabs {
     gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
   }
 
   .tab-btn {
     padding: 6px 10px;
     font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-time {
+    font-size: 22px;
   }
 }
 

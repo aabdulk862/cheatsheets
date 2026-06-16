@@ -1,0 +1,115 @@
+import type { ExperiencePanelConfig } from './types';
+
+export const wellsFargoExperience: ExperiencePanelConfig = {
+  mappings: [
+    {
+      topic: 'Java Streams & Collections',
+      level: 'expert',
+      evidence: [
+        'Fixed a production bug where Collectors.toMap() was silently crashing — it uses HashMap.merge() internally which calls Objects.requireNonNull() on values, so any null value throws an NPE',
+        'This was dropping about 16,000 outage notification messages per hour because the upstream Kafka system was sending null parameter values',
+        'I replaced it with a plain HashMap.put() loop which accepts nulls — chose this deliberately over filtering nulls because filtered nulls would make the message look "successful" but with missing data',
+        'Used Stream filter/map/collect pipelines daily in 22+ Kafka consumer beans for transforming incoming payloads into our internal format',
+      ],
+      talkingPoint: "We had a production bug dropping 16,000 messages per hour. The root cause was Collectors.toMap() — most people don't know this, but it uses HashMap.merge() internally, which rejects null values. Our upstream Kafka system was sending null template parameters. I replaced it with a HashMap.put() loop that accepts nulls, and chose that over simply filtering nulls because I traced downstream and found that filtering would cause messages to silently succeed with incomplete data — no failed record would be created, no one would ever know data was missing. With my fix, nulls flow through and downstream validation catches them properly, creating trackable failed records.",
+    },
+    {
+      topic: 'Spring Boot Internals',
+      level: 'expert',
+      evidence: [
+        'Work on 40+ microservices all running Spring Boot 3.x with Java 21',
+        'Built a caching layer using @Cacheable for error category lookups — about 75 rows loaded once, O(1) access after that',
+        'Found a @TimeLimiter annotation that was completely non-functional — it was on a private method, and Spring AOP proxies only intercept calls from outside the class',
+        'Use Spring Cloud Config daily for centralized properties — this lets us fix production SQL queries without deploying code',
+        'Implemented Jasypt encrypted properties for sensitive credentials (OTP passwords, DB secrets)',
+      ],
+      talkingPoint: "I work on 40+ Spring Boot microservices daily. One thing I found interesting — I discovered a @TimeLimiter annotation in our campaign processor that was doing absolutely nothing. It was on a private method, and Spring's AOP proxy only intercepts public methods called from outside the bean. So if your own class calls a private method with @TimeLimiter or @Cacheable, the proxy is bypassed entirely. I documented this for the team and restructured my caching calls to always go through the proxy. I also use Spring Cloud Config heavily — we externalize SQL queries into properties files, which means I can fix a production query bug by just updating a config property and restarting pods. No code build, no MR, no full deploy cycle.",
+    },
+    {
+      topic: 'Kafka Event Processing',
+      level: 'expert',
+      evidence: [
+        'Our Ingestion API has 22+ Kafka consumer beans across 3 separate clusters — Enterprise (uses Kerberos auth for compliance topics), CCT (plaintext for internal topics), and Internal',
+        'Each consumer uses Spring Cloud Stream function-style bindings with batch mode — up to 500 records per poll',
+        'Every message is isolated in a try-catch so one bad payload can\'t kill the entire batch',
+        'Consumers use @Async for throughput — but I discovered that if the async thread crashes, Spring\'s SimpleAsyncUncaughtExceptionHandler just logs it. No retry, no dead letter queue, no alert. The message is permanently gone.',
+        'When the thread pool is full, a RejectedExecutionException fires and we fall back to synchronous processing — slower but no data loss',
+      ],
+      talkingPoint: "Our platform has 22 Kafka consumer beans in a single service, across 3 clusters. The Enterprise cluster uses Kerberos for compliance topics like CPNI — that's customer proprietary data, federally regulated. The key architectural insight I found during my production debugging: our consumers use @Async for throughput, which means the consumer thread commits the Kafka offset immediately and hands each message to a thread pool. If processing crashes in that thread, Spring's SimpleAsyncUncaughtExceptionHandler just logs it — no retry, no DLQ, no alert. The message is permanently lost. That's exactly how 16,000 messages per hour were vanishing with zero visibility. I also built in a fallback pattern — when the thread pool is full, we catch RejectedExecutionException and process synchronously instead. Slower, but guaranteed delivery.",
+    },
+    {
+      topic: 'AWS EKS & Multi-Region Deployment',
+      level: 'expert',
+      evidence: [
+        'We run 31 microservices across East and West EKS clusters — active-active with MariaDB Galera multi-master replication',
+        'During production deployments, we route traffic to the opposite region while performing rolling updates (maxSurge:1, maxUnavailable:0)',
+        'I manage 15-18 ArgoCD values files per release — branchless GitOps where all environments live on main with folder-based separation',
+        'Discovered that ArgoCD sync does NOT restart pods for Spring Cloud Config changes — you need an explicit pod restart or config refresh',
+        'Identified missing preStop hooks as a stability risk — in-flight requests get dropped during pod termination because the load balancer hasn\'t drained yet',
+      ],
+      talkingPoint: "We deploy across East and West EKS clusters — active-active with MariaDB Galera multi-master replication. During production releases, we route traffic to the opposite region while doing rolling updates. I manage 18-file ArgoCD releases using branchless GitOps — every environment is a folder on main, not a branch. One thing that tripped me up early and I documented for the team: ArgoCD sync does NOT restart pods. If you change a Spring Cloud Config property, ArgoCD will happily show everything as 'Synced' and 'Healthy' but your pods are still running the old config. You need to explicitly delete the pod or hit the config refresh endpoint. I also identified that we're missing preStop hooks — which means during rolling deploys, the pod gets terminated before the load balancer finishes draining connections, so in-flight batch chunks get lost.",
+    },
+    {
+      topic: 'Production Debugging & CloudWatch',
+      level: 'expert',
+      evidence: [
+        'Use CloudWatch Log Insights daily with regex-based parsing to investigate production issues',
+        'Quantified 25,890 NPEs in a single day during the PSA investigation using parse + stats count()',
+        'Validated OTP encryption deployment by confirming encryption at ingestion, decryption at PCDP (which then sends to Pinpoint for actual delivery), and redaction in S3 — all through CloudWatch queries',
+        'Run before/after deployment comparisons (went from 69 errors/day to 0 with the CPNI props fix)',
+      ],
+      talkingPoint: "CloudWatch Log Insights is my primary debugging tool. For the PSA bug, I wrote queries with regex parsing — 'parse @message using a pattern, then stats count by error type' — and quantified 25,890 NPEs in one day. That's how I proved the severity to the team. After deploying my fix, I ran the exact same query to confirm zero NPEs. For the OTP feature, I validated all 5 checkpoints through CloudWatch: encrypted values at ingestion, decrypted at PCDP before it calls Pinpoint for delivery across each channel (email, SMS, RCS, IVR), redacted in S3 archival copies, and non-OTP messages completely unaffected. That post-deploy validation step is critical — you can't just deploy and hope.",
+    },
+    {
+      topic: 'Release Management & CI/CD',
+      level: 'expert',
+      evidence: [
+        'Managed the full 06.17.2026 release: 3 features across 5+ services',
+        'Wrote MOPs (Method of Procedure), coordinated deployment order across dependent services',
+        'Deployment order is a safety mechanism — for OTP encryption, PCDP must deploy before Ingestion API, otherwise customers see literal ENC(...) text',
+        'Found 5 errors in a senior developer\'s deployment runbook before production execution',
+        'Props-only hotfix pattern: fix production SQL without code build by updating Spring Cloud Config properties',
+      ],
+      talkingPoint: "I managed the full 06.17 release with 3 features across 5+ services. The key learning: deployment order IS your safety mechanism. For OTP encryption, the decryption service (PCDP) has to be deployed before the encryption service (Ingestion API) — if you reverse that, customers see literal 'ENC(aXf3...)' text in their SMS messages instead of their verification code. I also took ownership of a deployment from a senior developer and found 5 errors in his runbook before production — wrong cache clear URL, wrong rollback SQL, a nonexistent database column in the INSERT statement, wrong deployment step order, and an incorrect file count for the West region. Any one of those could have caused a production incident.",
+    },
+  ],
+  stories: [
+    {
+      title: 'Production Incident — PSA NPE',
+      prompt: 'Tell me about a production incident you resolved',
+      situation: 'Four months into my role, our PSA outage notification system was silently dropping about 16,000 messages per hour. Customers whose internet was down were never being notified that Spectrum was aware of the outage. No alerts were firing because the crash was hidden inside an @Async thread.',
+      task: 'I needed to find where messages were vanishing between Kafka offset commit and downstream delivery, fix it, and validate across all environments.',
+      action: 'I traced the full call chain from Kafka consumer through MapStruct mapper to downstream processing. Ran CloudWatch queries that quantified 25,890 NPEs in a single day. Identified two crash vectors — Collectors.toMap null rejection and a null.equalsIgnoreCase() call. Challenged the original RCA which overcounted failures by conflating Lombok toString null formatting with actual nulls. Chose to preserve nulls (not filter them) because filtering would cause silent data loss. Wrote 20 tests using real production payloads. Deployed across East/West clusters.',
+      result: 'Zero messages dropped after deploy. 16K msgs/hr restored. Found a second affected template the original ticket missed. Team adopted the validation pattern for future MapStruct work.',
+    },
+    {
+      title: 'Cross-Team Feature Delivery',
+      prompt: 'Tell me about coordinating across teams',
+      situation: 'Our BI team needed structured error categories to build dashboards, but error descriptions were freeform text at 75+ call sites across 3 microservices. No taxonomy existed, and the work depended on a stored procedure developer, an arbitration team, QA, and BI analysts — all working in parallel.',
+      task: 'Design and implement an error categorization system that works for both Java code and stored procedures, and coordinate all teams to converge on the same release.',
+      action: 'Went through 3 design iterations before landing on an ID-based DB lookup with pipe-delimited prefixes. Modified 42 call sites across 3 repos. When BI changed the entire ID numbering scheme 3 times mid-sprint, I maintained cross-reference tables, regenerated SQL, and caught 10 rules they missed in their own spreadsheet. Coordinated Gopi (stored procs), Pete and Shreya (BI), Jena and Smruti (arbitration), and Praveen (QA).',
+      result: 'All code merged and deployed to QA. 75 DB rows categorizing 94 error patterns. BI can now build dashboards on 9.7 million annual failure records for the first time. Shipped in 06.17 release.',
+    },
+    {
+      title: 'Deployment Ownership',
+      prompt: 'Tell me about taking ownership of something difficult',
+      situation: 'A security-sensitive OTP encryption feature was ready for UAT/production deployment, but the original developer needed to hand off. The feature touches 3 services, requires database inserts, encrypted config, and multi-environment ArgoCD deployment. Team documentation was also stale.',
+      task: 'Take full ownership of the deployment without prior involvement in the feature. Also, rebuild team documentation (self-initiated).',
+      action: 'Rather than blindly following the runbook, I validated every step against the actual system. Found 5 errors that could have caused production incidents. Separately, I rebuilt reference documentation for 6 core services by reading actual source code — found 5+ significant errors in the team\'s existing understanding (like believing we had 15 Kafka consumers when we actually have 22).',
+      result: 'OTP deployed without incident. Prevented potential customer-facing encrypted text. Team has verified documentation for the first time. Established a "verify against code" culture.',
+    },
+  ],
+  gaps: [
+    { topic: 'Java 21 / Spring Boot 3.x', status: 'strong' },
+    { topic: 'Kafka (22+ consumers, 3 clusters)', status: 'strong' },
+    { topic: 'AWS EKS / ArgoCD / CloudWatch', status: 'strong' },
+    { topic: 'Microservices architecture (40+ services)', status: 'strong' },
+    { topic: 'Production incident debugging', status: 'strong' },
+    { topic: 'CI/CD & release management', status: 'strong' },
+    { topic: 'Spring Batch (100 partitions, 750 threads)', status: 'strong' },
+    { topic: 'React / frontend', status: 'partial', note: 'Built React apps at GAMEC and Crocodile — not at Charter' },
+    { topic: 'Angular', status: 'partial', note: 'Did one RBAC feature at Charter, limited scope' },
+    { topic: 'HackerRank-style algorithms', status: 'weak', note: 'Need timed LeetCode Medium practice' },
+    { topic: 'Banking domain (Wells Fargo specific)', status: 'weak', note: 'Study payment processing, fraud patterns' },
+  ],
+};

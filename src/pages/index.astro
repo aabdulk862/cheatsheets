@@ -1,6 +1,32 @@
 ---
 import '../styles/global.css';
 
+const techDepth = [
+  { level: 'Expert', techs: ['Java 21', 'Spring Boot 3.x', 'Spring Cloud Config', 'Spring Cache', 'Kafka (22+ consumers)', 'CloudWatch', 'AWS EKS', 'ArgoCD', 'MariaDB', 'GitLab CI/CD', 'Docker'] },
+  { level: 'Proficient', techs: ['Spring Batch', 'Spring Cloud Stream', 'RabbitMQ', 'MapStruct', 'Jasypt', 'Resilience4j', 'Helm', 'AWS S3', 'AWS Pinpoint', 'Lombok', 'SQL/Stored Procs'] },
+  { level: 'Familiar', techs: ['Spring Security', 'Oracle', 'Angular', 'React', 'Kinesis', 'SQS', 'AWS Connect'] },
+];
+
+const accomplishments = [
+  { title: 'PSA NPE Fix', metric: '16K msgs/hr saved', desc: 'Fixed Collectors.toMap() null crash dropping outage notifications. Traced across @Async boundaries. 20 tests with prod payloads.' },
+  { title: 'Error Categorization', metric: '9.7M records/year', desc: 'Designed cross-service taxonomy: 42 call sites, 3 repos, 75 DB rows. BI can now build dashboards on delivery failures.' },
+  { title: 'OTP Encryption Deploy', metric: '5 runbook errors caught', desc: 'Took deployment ownership. Encrypt-at-source, decrypt-at-delivery. Validated all 5 channels via CloudWatch.' },
+  { title: 'CPNI Props-Only Fix', metric: '69→0 errors/day', desc: 'Zero code change — appended ORDER BY + LIMIT 1 to externalized SQL. Navigated undocumented EKS migration.' },
+  { title: 'Service Extraction', metric: 'Monolith → Microservice', desc: 'Extracted Appointment Service from Tech Tracker. Stripped 4 dependency trees. Demoed to Director.' },
+  { title: 'Stability Backlog', metric: '14 risks identified', desc: 'Applied Release It! to prod codebase. Found thread leaks, missing circuit breakers, chunk loss on deploys.' },
+];
+
+const storyRouter = [
+  { prompt: 'Production incident', story: 'PSA NPE — 16K msgs/hr silent drop, traced @Async exception swallowing' },
+  { prompt: 'Cross-team collaboration', story: 'Error Categorization — 4+ teams, BI changed schema 3x, delivered on schedule' },
+  { prompt: 'Taking ownership', story: 'OTP Deployment — found 5 runbook errors, prevented customer-visible ENC(...) text' },
+  { prompt: 'Navigating ambiguity', story: 'CPNI Fix — discovered undocumented Swarm→EKS migration, created guide for team' },
+  { prompt: 'Technical disagreement', story: 'Null Preservation — chose harder approach because filtering = silent data loss' },
+  { prompt: 'Going above and beyond', story: 'Stability Backlog + Doc Rebuild — 14 risks, 6 service docs, 5+ team errors corrected' },
+  { prompt: 'Handling scope changes', story: 'Error IDs changed 3x mid-sprint — remapped all, caught 10 rules BI missed' },
+  { prompt: 'Compliance-sensitive work', story: 'CPNI Federal Compliance — Telecom Act 1996, 5+ repos, zero code changes needed' },
+];
+
 const interviews = [
   {
     name: 'Wells Fargo',
@@ -150,6 +176,54 @@ const playbooks = [
             <div class="playbook-arrow">→</div>
           </a>
         ))}
+      </section>
+
+      <!-- Master Experience Map -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Master Experience Map</h2>
+          <span class="section-badge">UCC Hub · Charter/Spectrum via Infosys</span>
+        </div>
+
+        <div class="platform-context">
+          <strong>Platform:</strong> 40+ Java 21/Spring Boot microservices · millions msgs/day · 31M customers · 5 channels · 22+ Kafka consumers · 114M-row tables (155GB) · AWS EKS East/West · ArgoCD GitOps
+        </div>
+
+        <h3 class="subsection-title">Technical Depth</h3>
+        <div class="depth-grid">
+          {techDepth.map(row => (
+            <div class="depth-row">
+              <span class={`depth-level depth-${row.level.toLowerCase()}`}>{row.level}</span>
+              <div class="depth-techs">
+                {row.techs.map(t => <span class="tag">{t}</span>)}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <h3 class="subsection-title">Key Accomplishments</h3>
+        <div class="accomplishment-grid">
+          {accomplishments.map(a => (
+            <div class="accomplishment-card">
+              <div class="acc-top">
+                <span class="acc-title">{a.title}</span>
+                <span class="acc-metric">{a.metric}</span>
+              </div>
+              <p class="acc-desc">{a.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3 class="subsection-title">Story Router — "When They Ask → Use This"</h3>
+        <div class="story-router-grid">
+          {storyRouter.map(s => (
+            <div class="sr-row">
+              <span class="sr-prompt">"{s.prompt}"</span>
+              <span class="sr-arrow">→</span>
+              <span class="sr-story">{s.story}</span>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
 
@@ -378,11 +452,54 @@ const playbooks = [
         .interview-grid { grid-template-columns: 1fr; }
         .playbook-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
         .playbook-arrow { display: none; }
+        .sr-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+        .sr-arrow { display: none; }
+        .depth-row { flex-direction: column; gap: 6px; }
       }
 
       @media (min-width: 1200px) {
         .interview-grid { grid-template-columns: repeat(3, 1fr); }
       }
+
+      /* Master Experience Map */
+      .platform-context {
+        font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;
+        background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg); padding: 12px 16px; margin-bottom: 1.5rem;
+      }
+      .subsection-title {
+        font-size: 14px; font-weight: 700; color: var(--color-text-primary);
+        margin: 1.25rem 0 0.75rem; padding-bottom: 4px;
+        border-bottom: 1px solid var(--color-border-tertiary);
+      }
+      .depth-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+      .depth-row { display: flex; align-items: center; gap: 12px; }
+      .depth-level {
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+        padding: 3px 10px; border-radius: 4px; min-width: 80px; text-align: center;
+      }
+      .depth-expert { background: #eaf3de; color: #3b6d11; }
+      .depth-proficient { background: #faeeda; color: #854f0b; }
+      .depth-familiar { background: #e6f1fb; color: #0c447c; }
+      .depth-techs { display: flex; flex-wrap: wrap; gap: 5px; }
+      .accomplishment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+      .accomplishment-card {
+        background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg); padding: 14px 16px;
+      }
+      .acc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+      .acc-title { font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
+      .acc-metric { font-size: 11px; font-weight: 600; color: #3b6d11; background: #eaf3de; border-radius: 4px; padding: 2px 8px; }
+      .acc-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+      .story-router-grid { display: flex; flex-direction: column; gap: 6px; }
+      .sr-row {
+        display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+        background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-md);
+      }
+      .sr-prompt { font-size: 13px; font-weight: 600; color: var(--color-text-primary); min-width: 180px; }
+      .sr-arrow { color: var(--color-text-tertiary); }
+      .sr-story { font-size: 12px; color: var(--color-text-secondary); }
     </style>
   </body>
 </html>

@@ -128,21 +128,23 @@
 %-----------EXPERIENCE-----------
 \section{Experience}
   \resumeSubHeadingListStart
-
     \resumeSubheading
-      {Infosys \textnormal{(Client: Charter Communications/Spectrum)}}{Charlotte, NC}
-      {Software Engineer}{Mar 2025 -- Present}
-      \resumeItemListStart
-        \resumeItem{Handled production incident resolution on a communications platform processing millions of records daily across Email, SMS, RCS, and IVR channels — 40+ Java 21/Spring Boot microservices, Kafka, RabbitMQ, MariaDB, deployed on EKS.}
-        \resumeItem{Diagnosed and fixed a production NPE silently dropping \textasciitilde16,000 messages/hour by tracing failures across async execution boundaries and identifying crash vectors in MapStruct-based event mapping logic.}
+      {Infosys (Client: Charter Communications/Spectrum)}
+      {Charlotte, NC}
+      {Software Engineer}
+      {Mar 2025 -- Present}
+    \resumeItemListStart
+        \resumeItem{Resolved production incidents on a communications platform processing millions of records daily across Email, SMS, RCS, and IVR channels — 40+ Java 21/Spring Boot microservices, Kafka, RabbitMQ, MariaDB, deployed on EKS.}
+        \resumeItem{Diagnosed and fixed a production NPE silently dropping \textasciitilde16,000 messages/hour by tracing failures across async execution boundaries and identifying crash vectors in MapStruct-based event mapping logic — wrote 7 targeted tests using real prod payloads, deployed fix across East/West clusters.}
         \resumeItem{Resolved a multi-row query conflict caused by RCS channel fallback creating duplicate records — delivered a zero-downtime SQL fix validated against live prod data, and coordinated props-only deployment across 7 environment-specific config files.}
+        \resumeItem{Designed and implemented a cross-service error categorization system spanning 3 microservices (CPM, Ingestion API, Publisher) — built a DB-backed category resolver with Spring cache integration, modified 30+ call sites, and enabled BI analytics on \textasciitilde9.7M annual error records previously uncategorized.}
         \resumeItem{Extracted Appointment Service from a monolithic codebase into a standalone Spring Boot microservice handling technician dispatch and appointment lifecycle via REST APIs and RabbitMQ — removed unused Kafka, S3, and batch dependencies, presented working demo to Director of Engineering.}
-        \resumeItem{Remediated Log4Shell (CVE-2021-44228) and Spring Cloud Function RCE (CVE-2022-22963) across 14 Logstash services in 5 environments — rebuilt Docker images, verified via Qualys scans, and distinguished active vulnerabilities from false positives in stale overlay layers.}
         \resumeItem{Managed full release lifecycle: wrote MOPs, bumped image versions across 15+ ArgoCD values files, coordinated UAT/prod deployments (East/West), authored rollback procedures, and ran post-deploy CloudWatch validation queries.}
-        \resumeItem{Developed AI-assisted engineering tooling using LLMs, structured documentation, and Python automation to accelerate code analysis, troubleshooting, and knowledge discovery across distributed services.}
+        \resumeItem{Designed and built an AI-augmented engineering workflow: created a verified knowledge base covering 40+ microservices as structured context for LLM tools, authored custom steering files for code generation, and designed a CI pipeline to detect documentation drift when service code changes.}
       \resumeItemListEnd
 
-    \resumeSubheading
+
+\resumeSubheading
   {Revature}{Remote}
   {Full Stack Developer (Hire-Train-Deploy Program)}{Jun 2024 -- Mar 2025}
   \resumeItemListStart

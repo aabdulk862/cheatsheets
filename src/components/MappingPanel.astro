@@ -1,0 +1,163 @@
+---
+import type { ExperiencePanelConfig } from '../data/types';
+
+interface Props extends ExperiencePanelConfig {}
+
+const { mappings, stories, gaps } = Astro.props;
+
+const levelColor = (l: string) => l === 'expert' ? 'badge-easy' : l === 'proficient' ? 'badge-medium' : 'badge-hard';
+const gapColor = (s: string) => s === 'strong' ? 'badge-easy' : s === 'partial' ? 'badge-medium' : 'badge-hard';
+---
+
+<div class="mapping-panel">
+  <div class="section-label">Experience Mappings</div>
+  <div class="mapping-grid">
+    {mappings.map(m => (
+      <div class="mapping-card">
+        <div class="mapping-header">
+          <span class="mapping-topic">{m.topic}</span>
+          <span class={`badge ${levelColor(m.level)}`}>{m.level}</span>
+        </div>
+        <ul class="mapping-evidence">
+          {m.evidence.map(e => <li>{e}</li>)}
+        </ul>
+        <div class="mapping-tp">
+          <strong>Say:</strong> "{m.talkingPoint}"
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="section-label">Behavioral Stories (STAR)</div>
+  <div class="stories-grid">
+    {stories.map(s => (
+      <div class="story-card">
+        <div class="story-header">
+          <span class="story-title">{s.title}</span>
+          <span class="story-prompt">"{s.prompt}"</span>
+        </div>
+        <div class="star-grid">
+          <div class="star-item"><span class="star-label">S</span><span>{s.situation}</span></div>
+          <div class="star-item"><span class="star-label">T</span><span>{s.task}</span></div>
+          <div class="star-item"><span class="star-label">A</span><span>{s.action}</span></div>
+          <div class="star-item"><span class="star-label">R</span><span>{s.result}</span></div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="section-label">Gap Analysis</div>
+  <div class="gap-grid">
+    {gaps.map(g => (
+      <div class="gap-item">
+        <span class={`badge ${gapColor(g.status)}`}>{g.status}</span>
+        <span class="gap-topic">{g.topic}</span>
+        {g.note && <span class="gap-note">{g.note}</span>}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .mapping-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mapping-card {
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+  }
+  .mapping-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .mapping-topic {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .mapping-evidence {
+    padding-left: 1.25rem;
+    font-size: 12.5px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+  .mapping-tp {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 8px 12px;
+    line-height: 1.5;
+    border-left: 3px solid var(--color-accent);
+  }
+  .stories-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .story-card {
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+  }
+  .story-header {
+    margin-bottom: 10px;
+  }
+  .story-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .story-prompt {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+  }
+  .star-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .star-item {
+    display: flex;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  .star-label {
+    font-weight: 700;
+    color: var(--color-accent);
+    min-width: 14px;
+  }
+  .gap-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gap-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  .gap-topic {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+  .gap-note {
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+  }
+</style>
