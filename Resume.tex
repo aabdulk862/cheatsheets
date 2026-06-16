@@ -105,7 +105,7 @@
 
 %-----------SUMMARY-----------
 \section{Summary}
-\small{Software Engineer supporting a high-volume distributed communications platform consisting of 40+ Java 21 and Spring Boot microservices processing millions of messages daily. Experienced diagnosing production incidents end-to-end, from CloudWatch analysis and root-cause investigation through deployment validation and rollback planning. Experience spans backend services, event-driven architectures (Kafka, RabbitMQ), cloud infrastructure on AWS EKS, SQL performance tuning, enterprise security remediation, and full-stack development using React and Angular.}
+\small{Software Engineer with enterprise experience designing, debugging, and deploying distributed systems at scale. Built cross-service integrations adopted across engineering and business teams, owned security-critical deployments in multi-region environments, and extracted microservices from monolithic codebases. Combines deep backend expertise (Java 21, Spring Boot, event-driven architecture) with cloud-native operations (AWS, Kubernetes, CI/CD) and full-stack capability (React, Angular, TypeScript).}
 
 %-----------EDUCATION-----------
 \section{Education}
@@ -135,11 +135,11 @@
       {Mar 2025 -- Present}
     \resumeItemListStart
         \resumeItem{Resolved production incidents on a communications platform processing millions of records daily across Email, SMS, RCS, and IVR channels — 40+ Java 21/Spring Boot microservices, Kafka, RabbitMQ, MariaDB, deployed on EKS.}
-        \resumeItem{Diagnosed and fixed a production NPE silently dropping \textasciitilde16,000 messages/hour by tracing failures across async execution boundaries and identifying crash vectors in MapStruct-based event mapping logic — wrote 7 targeted tests using real prod payloads, deployed fix across East/West clusters.}
-        \resumeItem{Resolved a multi-row query conflict caused by RCS channel fallback creating duplicate records — delivered a zero-downtime SQL fix validated against live prod data, and coordinated props-only deployment across 7 environment-specific config files.}
-        \resumeItem{Designed and implemented a cross-service error categorization system spanning 3 microservices (CPM, Ingestion API, Publisher) — built a DB-backed category resolver with Spring cache integration, modified 30+ call sites, and enabled BI analytics on \textasciitilde9.7M annual error records previously uncategorized.}
+        \resumeItem{Diagnosed and fixed a production NPE silently dropping \textasciitilde16,000 messages/hour by tracing failures across async execution boundaries and identifying crash vectors in MapStruct-based event mapping logic — wrote 20 tests using real prod payloads, deployed fix across East/West clusters.}
+        \resumeItem{Resolved a multi-row query conflict caused by RCS channel fallback creating duplicate records — delivered a zero-downtime SQL fix via externalized Spring Cloud Config properties, validated against live prod data across 12 environment-specific config files.}
+        \resumeItem{Designed and implemented a cross-service error categorization system spanning 3 microservices (CPM, Ingestion API, Publisher) — built a DB-backed category resolver with Spring \texttt{@Cacheable}, modified 42 call sites, coordinated 4+ parallel workstreams, and enabled BI dashboards on \textasciitilde9.7M annual error records.}
         \resumeItem{Extracted Appointment Service from a monolithic codebase into a standalone Spring Boot microservice handling technician dispatch and appointment lifecycle via REST APIs and RabbitMQ — removed unused Kafka, S3, and batch dependencies, presented working demo to Director of Engineering.}
-        \resumeItem{Managed full release lifecycle: wrote MOPs, bumped image versions across 15+ ArgoCD values files, coordinated UAT/prod deployments (East/West), authored rollback procedures, and ran post-deploy CloudWatch validation queries.}
+        \resumeItem{Took deployment ownership of an OTP encryption feature spanning 3 services — validated Jasypt encrypt-at-source/decrypt-at-delivery pipeline via CloudWatch, caught 5 errors in existing runbook before production, and managed 18-file ArgoCD promotion across East/West EKS clusters.}
         \resumeItem{Designed and built an AI-augmented engineering workflow: created a verified knowledge base covering 40+ microservices as structured context for LLM tools, authored custom steering files for code generation, and designed a CI pipeline to detect documentation drift when service code changes.}
       \resumeItemListEnd
 
