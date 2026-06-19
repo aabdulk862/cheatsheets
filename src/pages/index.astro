@@ -22,7 +22,7 @@ const storyRouter = [
   { prompt: 'Taking ownership', story: 'OTP Deployment — found 5 runbook errors, prevented customer-visible ENC(...) text' },
   { prompt: 'Navigating ambiguity', story: 'CPNI Fix — discovered undocumented Swarm→EKS migration, created guide for team' },
   { prompt: 'Technical disagreement', story: 'Null Preservation — chose harder approach because filtering = silent data loss' },
-  { prompt: 'Going above and beyond', story: 'Stability Backlog + Doc Rebuild — 14 risks, 6 service docs, 5+ team errors corrected' },
+  { prompt: 'Going above and beyond', story: 'Design Pivot — scrapped approved pattern-matching plan, proposed ID-based DB lookup instead (fragile vs maintainable)' },
   { prompt: 'Handling scope changes', story: 'Error IDs changed 3x mid-sprint — remapped all, caught 10 rules BI missed' },
   { prompt: 'Compliance-sensitive work', story: 'CPNI Federal Compliance — Telecom Act 1996, 5+ repos, zero code changes needed' },
 ];
@@ -223,6 +223,87 @@ const playbooks = [
               <span class="sr-story">{s.story}</span>
             </div>
           ))}
+        </div>
+
+        <h3 class="subsection-title">Full Stories (STAR)</h3>
+        <div class="full-stories">
+          <div class="full-story-card">
+            <div class="fs-header">
+              <span class="fs-title">Production Incident — PSA NPE (16K msgs/hr)</span>
+              <span class="fs-prompt">"Tell me about a production incident" / "Tell me about a difficult bug"</span>
+            </div>
+            <div class="fs-body">
+              <div class="fs-star"><span class="fs-label">S</span><span>About four months into my role, I got pulled into investigating a production issue on our PSA system — Proactive Service Alerts, how Spectrum notifies customers when their internet goes down. The upstream system AOM detects outages and publishes events to Kafka. Our Kafka Ingestion API consumes them, transforms them through a MapStruct mapper, and routes them for delivery. About 16,000 of these notifications per hour were silently vanishing. No alerts fired, no dead letter queue caught them. Customers with outages just never got notified.</span></div>
+              <div class="fs-star"><span class="fs-label">T</span><span>I needed to figure out where messages were disappearing. The tricky part: monitoring showed zero errors — the system appeared completely healthy. I also needed to fix it, write regression tests, and deploy across both East and West production clusters.</span></div>
+              <div class="fs-star"><span class="fs-label">A</span><span>I traced the execution path. Our Kafka consumers use @Async for throughput — the consumer commits the offset immediately and hands each message to a thread pool. If that thread crashes, Spring's SimpleAsyncUncaughtExceptionHandler just logs it. No retry, no DLQ, no alert. Offset already committed — message permanently gone. That's why monitoring was clean. The crash site: PsaPayloadMapper uses Collectors.toMap() which internally uses HashMap.merge() → Objects.requireNonNull() on values. AOM was sending null template parameters — instant NPE on every one. I found a second vector too: getValue().equalsIgnoreCase("Wildfire") — NPE if value is null. I challenged the initial RCA from another engineer which overcounted by conflating Lombok toString() null formatting ("value=null") with empty strings ("value=)"). Only 3 fields were actually null. For the fix, I chose HashMap.put() over filtering nulls. Filtering would make messages appear successful with missing data — no failed record, nobody would know. HashMap.put() accepts nulls, downstream validation catches them, creates proper failed records. Also applied a Yoda condition for the second vector. Wrote 20 tests with real production payloads from CloudWatch.</span></div>
+              <div class="fs-star"><span class="fs-label">R</span><span>Zero messages dropped after deployment. 16K msgs/hr restored. Found a second affected template not in the original ticket. Team adopted the pattern for future MapStruct work. Deployed across QA (6 files), UAT (15 files), production East/West.</span></div>
+            </div>
+          </div>
+
+          <div class="full-story-card">
+            <div class="fs-header">
+              <span class="fs-title">Cross-Service Error Categorization (9.7M records)</span>
+              <span class="fs-prompt">"Tell me about coordinating across teams" / "Tell me about designing a system"</span>
+            </div>
+            <div class="fs-body">
+              <div class="fs-star"><span class="fs-label">S</span><span>Our BI team — Pete Razo and Shreya Chittari — couldn't build dashboards on delivery failures. The error_description field in our main table (114 million rows, 155 GB) was freeform text. 9.7 million error records per year with zero structure. The work touched 3 microservices, 2 stored procedures owned by Gopi, an arbitration team (Jena and Smruti), QA (Praveen), and BI — all needing to ship in the same release.</span></div>
+              <div class="fs-star"><span class="fs-label">T</span><span>Design a categorization system that works for both my Java code and Gopi's stored procedures, then coordinate everyone to converge on the 06.17 release.</span></div>
+              <div class="fs-star"><span class="fs-label">A</span><span>Three design iterations: (1) new columns on 155GB table — rejected as too risky. (2) Publisher-only — rejected, errors originate in CPM. (3) Pipe-delimited prefix on existing field (approved). Format: "Extraction|Template Error|Template Not Enabled|original error". BI parses with split("|", 4). Old records without pipes = uncategorized. Zero schema migration. Built extract_category_mapping table (75 rows), @Cacheable service for O(1) lookups. Each call site references a hardcoded ID. For Gopi's procs: he returns "ID| error text" format, my code parses and resolves the prefix from DB. Modified 42 call sites across 3 repos. BI changed the ID scheme 3 times — from 58 to 57 to 74. Each time I maintained cross-references, regenerated SQL, caught 10 rules they missed. Coordinated Gopi (proc format), Pete/Shreya (BI categories), Jena/Smruti (arbitration), Yossi (downstream Kafka notification), Praveen (QA).</span></div>
+              <div class="fs-star"><span class="fs-label">R</span><span>All 3 MRs merged. 75 DB rows categorizing 94 error patterns. BI can build dashboards on 9.7M annual failures for the first time. Extensible: new error = one INSERT + use the ID. Shipped in 06.17 release.</span></div>
+            </div>
+          </div>
+
+          <div class="full-story-card">
+            <div class="fs-header">
+              <span class="fs-title">OTP Encryption Deployment Ownership</span>
+              <span class="fs-prompt">"Tell me about taking ownership" / "Tell me about attention to detail"</span>
+            </div>
+            <div class="fs-body">
+              <div class="fs-star"><span class="fs-label">S</span><span>OTP encryption feature was ready for UAT/production. Developer Shankar needed to hand off. The feature touches 3 services: Ingestion API encrypts OTP codes using Jasypt, PCDP decrypts before calling Pinpoint for delivery, and Email Copy Producer suppresses sensitive data in logs. Requires DB inserts, Jasypt env vars in configMaps, and 18-file ArgoCD deployment. I had zero prior involvement in building it.</span></div>
+              <div class="fs-star"><span class="fs-label">T</span><span>Take full deployment ownership of a security-critical feature I didn't build. Validate in QA, deploy to UAT, prepare for production — without breaking customer-facing OTP delivery.</span></div>
+              <div class="fs-star"><span class="fs-label">A</span><span>Rather than blindly following the runbook, I validated every step against the actual system. Ran CloudWatch queries to verify 5 checkpoints: encryption at Ingestion (verify_code=ENC(...)), decryption at PCDP, S3 redaction (asterisks), log suppression, non-OTP unaffected. Found 5 errors in the runbook: (1) wrong cache clear URL — /cache/all not /cache/clear (wrong one only clears one pod), (2) wrong rollback SQL — code ignores the enabled flag so the documented rollback would silently fail, (3) nonexistent DB column in INSERT, (4) wrong deployment order — PCDP must deploy before Ingestion or customers see literal "ENC(...)" text, (5) PROD West has 3 files not 5. Fixed all before execution. Managed ArgoCD sync across 5 OutOfSync UAT apps.</span></div>
+              <div class="fs-star"><span class="fs-label">R</span><span>OTP deployed to UAT, all 5 checkpoints passing. 5 runbook corrections prevent future errors. Showed I can own a complex security deployment I didn't build by validating against the system rather than trusting documentation.</span></div>
+            </div>
+          </div>
+
+          <div class="full-story-card">
+            <div class="fs-header">
+              <span class="fs-title">CPNI Props-Only Fix + Undocumented Migration</span>
+              <span class="fs-prompt">"Tell me about navigating ambiguity" / "Tell me about a zero-risk fix"</span>
+            </div>
+            <div class="fs-body">
+              <div class="fs-star"><span class="fs-label">S</span><span>Production error: queryForObject() throwing IncorrectResultSizeDataAccessException because RCS channel was recently enabled for CPNI templates. When RCS fails, SMS fallback creates a second database row. Code expected exactly 1 row — now got 2. About 400 errors/day in production logs, though no customer impact.</span></div>
+              <div class="fs-star"><span class="fs-label">T</span><span>Fix with minimum risk. Also: when I went to deploy the fix to QA, nothing worked because the environment had been migrated from Docker Swarm to EKS without anyone updating documentation.</span></div>
+              <div class="fs-star"><span class="fs-label">A</span><span>Chose the lowest-risk approach: our SQL is externalized in Spring Cloud Config properties, so I appended "ORDER BY jpd_id DESC LIMIT 1" to the query. The newest row (SMS fallback) always has the correct final status. Zero code change. Validated against 6 edge cases with live prod data. For the QA deployment: I discovered Portainer (Swarm) showed no services. Investigated and found everything had migrated to EKS. Had to figure out new property file naming (-eks-qa1 suffix), correct CloudWatch log groups, and that ArgoCD sync doesn't restart pods for config-only changes. Created a comprehensive EKS Deep Dive guide for the team.</span></div>
+              <div class="fs-star"><span class="fs-label">R</span><span>69 errors/day → 0 instantly after pod restart. Zero code change, zero downtime. EKS guide prevents future confusion for anyone deploying to the migrated environment.</span></div>
+            </div>
+          </div>
+
+          <div class="full-story-card">
+            <div class="fs-header">
+              <span class="fs-title">Monolith → Microservice Extraction</span>
+              <span class="fs-prompt">"Tell me about decomposing a monolith" / "Tell me about a project you're proud of"</span>
+            </div>
+            <div class="fs-body">
+              <div class="fs-star"><span class="fs-label">S</span><span>Our Tech Tracker service was a monolith combining appointment lifecycle management with Glympse real-time technician tracking, Kafka consumers for CSG work order events, S3 file handling, and Spring Batch processing. Changes to appointment logic risked breaking unrelated functionality. The service had grown organically and nobody had drawn a boundary.</span></div>
+              <div class="fs-star"><span class="fs-label">T</span><span>Extract the appointment domain into a standalone microservice with reduced blast radius.</span></div>
+              <div class="fs-star"><span class="fs-label">A</span><span>Mapped class dependencies to identify the bounded context. Created a new Spring Boot project with only REST APIs and RabbitMQ — the two communication patterns the appointment domain actually needs. Systematically removed 4 dependency trees that don't belong: Kafka (appointments don't consume events directly), S3 (different concern), Spring Batch (not an appointment concern), and Glympse (separate bounded context). Each removal required verifying no appointment logic accidentally depended on those libraries. Built clean API contracts for the remaining monolith to call. Presented working demo to Director of Engineering.</span></div>
+              <div class="fs-star"><span class="fs-label">R</span><span>Standalone Appointment Service deployed. Changes to appointments can't break Glympse or batch processing. Director approved further decomposition along the same pattern.</span></div>
+            </div>
+          </div>
+
+          <div class="full-story-card">
+            <div class="fs-header">
+              <span class="fs-title">Design Pivot — Pattern Matching → ID-Based Lookup</span>
+              <span class="fs-prompt">"Tell me about changing your approach" / "Tell me about a design decision"</span>
+            </div>
+            <div class="fs-body">
+              <div class="fs-star"><span class="fs-label">S</span><span>I was implementing the error categorization system for our BI team. My first approved design was a pattern-matching resolver — an ErrorCategoryResolver class with a chain of startsWith/contains checks that would match freeform error text to categories. I'd already scoped it to 19 patterns covering 838K records/year. But as I dug deeper into the codebase (reading the ~2000-line stored procedure, tracing all 30+ setErrorDescription call sites, running CloudWatch queries on production), I realized the pattern-matching approach was fundamentally fragile.</span></div>
+              <div class="fs-star"><span class="fs-label">T</span><span>I needed to decide whether to continue with the approved pattern-matching plan (which was already scoped and ready to implement) or propose a fundamentally different approach that would require re-planning — but be correct long-term.</span></div>
+              <div class="fs-star"><span class="fs-label">A</span><span>I identified the core problem: pattern matching breaks silently when error messages change. If someone updates a log message from "Couldn't determine" to "Unable to determine", the matcher stops working and errors go uncategorized again — with no alert. The code that generates the error already knows what went wrong, so it should declare the category at the source. I proposed an ID-based DB lookup instead: a table with serial IDs mapped to structured prefixes, and each error-generating call site references its ID directly. No pattern matching, no fragile string chains. I rewrote the plan: dropped the ErrorCategoryResolver class entirely, dropped the post-hoc hook points, created extract_category_mapping table (75 rows), and built an @Cacheable thin wrapper. Each call site becomes: setErrorDescription(getDescription(15) + dynamicText). New errors = INSERT one row + use the ID. Other teams (stored procs, arbitration) can adopt the same pattern with their own ID ranges. Submitted the revised plan and got it approved. Then during code review, the team suggested switching from my manual ConcurrentHashMap + @EventListener to Spring @Cacheable — I incorporated that feedback and simplified further.</span></div>
+              <div class="fs-star"><span class="fs-label">R</span><span>The ID-based approach is now implemented across 42 call sites in 3 services. It's fundamentally more maintainable — no pattern matching that silently breaks. Extensible: new error = one INSERT. Other teams adopted the same ID pattern for their stored procs and arbitration rules. The pivot added one day of re-planning but saved months of future maintenance from fragile string matching.</span></div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -455,6 +536,28 @@ const playbooks = [
         .sr-row { flex-direction: column; align-items: flex-start; gap: 2px; }
         .sr-arrow { display: none; }
         .depth-row { flex-direction: column; gap: 6px; }
+        .accomplishment-grid { grid-template-columns: 1fr; }
+        .sr-prompt { min-width: 0; font-size: 12px; }
+        .sr-story { font-size: 11.5px; }
+        .acc-top { flex-wrap: wrap; gap: 4px; }
+        .platform-context { font-size: 12px; }
+        .full-story-card { padding: 1rem; }
+        .fs-title { font-size: 13px; }
+        .fs-star { font-size: 12px; gap: 8px; }
+      }
+
+      @media (max-width: 480px) {
+        .hero h1 { font-size: 22px; }
+        .hero-sub { font-size: 13px; }
+        .section-header h2 { font-size: 16px; }
+        .accomplishment-card { padding: 10px 12px; }
+        .acc-title { font-size: 12px; }
+        .acc-desc { font-size: 11px; }
+        .sr-row { padding: 8px 10px; }
+        .depth-level { font-size: 10px; min-width: 70px; }
+        .full-story-card { padding: 0.75rem; }
+        .fs-title { font-size: 12.5px; }
+        .fs-star { font-size: 11.5px; line-height: 1.5; }
       }
 
       @media (min-width: 1200px) {
@@ -500,6 +603,19 @@ const playbooks = [
       .sr-prompt { font-size: 13px; font-weight: 600; color: var(--color-text-primary); min-width: 180px; }
       .sr-arrow { color: var(--color-text-tertiary); }
       .sr-story { font-size: 12px; color: var(--color-text-secondary); }
+
+      /* Full Stories */
+      .full-stories { display: flex; flex-direction: column; gap: 16px; }
+      .full-story-card {
+        background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary);
+        border-radius: var(--border-radius-lg); padding: 1.5rem; 
+      }
+      .fs-header { margin-bottom: 14px; }
+      .fs-title { font-size: 16px; font-weight: 700; color: var(--color-text-primary); display: block; margin-bottom: 3px; }
+      .fs-prompt { font-size: 12px; color: var(--color-text-tertiary); font-style: italic; }
+      .fs-body { display: flex; flex-direction: column; gap: 12px; }
+      .fs-star { display: flex; gap: 12px; font-size: 14px; color: var(--color-text-secondary); line-height: 1.7; }
+      .fs-label { font-weight: 800; color: #4a90d9; min-width: 18px; flex-shrink: 0; font-size: 15px; }
     </style>
   </body>
 </html>

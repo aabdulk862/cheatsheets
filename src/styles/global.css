@@ -11,8 +11,8 @@
 
   /* Colors — neutral palette */
   --color-text-primary: #1a1a2e;
-  --color-text-secondary: #555770;
-  --color-text-tertiary: #8b8da0;
+  --color-text-secondary: #3d3f52;
+  --color-text-tertiary: #6b6d80;
   --color-background-primary: #ffffff;
   --color-background-secondary: #f5f6f8;
   --color-border-primary: #c4c6d0;
@@ -47,8 +47,9 @@ body {
   font-family: var(--font-sans);
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ===== Container ===== */
@@ -205,14 +206,14 @@ body {
 
 /* ===== Section Labels ===== */
 .section-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-tertiary);
-  margin: 1.5rem 0 0.75rem;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--color-border-tertiary);
+  color: var(--color-accent);
+  margin: 1.75rem 0 1rem;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-accent);
 }
 
 .section-label:first-child {
@@ -244,10 +245,10 @@ body {
 }
 
 .card-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-text-secondary);
   margin-bottom: 10px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* ===== Pattern Cards ===== */
@@ -689,9 +690,9 @@ pre .astro-code {
 .strategy-card ol,
 .strategy-card ul {
   padding-left: 1.25rem;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--color-text-secondary);
-  line-height: 1.8;
+  line-height: 1.9;
 }
 
 .strategy-card .highlight-text {
@@ -822,21 +823,92 @@ pre .astro-code {
     align-items: flex-start;
   }
 
+  .header-left h1 {
+    font-size: 18px;
+  }
+
+  .header-left p {
+    font-size: 12px;
+  }
+
   pre code,
   pre .astro-code {
     overflow-x: auto;
     max-width: 100%;
+    font-size: 11.5px;
+    padding: 12px 14px;
   }
 
   .question-card-header .q-hint {
     display: none;
   }
+
+  .card-title {
+    font-size: 12.5px;
+  }
+
+  .card-desc {
+    font-size: 11.5px;
+  }
+
+  .pattern-card {
+    padding: 0.75rem 1rem;
+  }
+
+  .strategy-card {
+    padding: 1rem;
+  }
+
+  .strategy-card ol,
+  .strategy-card ul {
+    font-size: 12px;
+    line-height: 1.7;
+    padding-left: 1rem;
+  }
+
+  .section-label {
+    font-size: 10px;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .meta-item {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .kw {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .plan-type {
+    font-size: 12px;
+  }
+
+  .plan-time {
+    font-size: 24px;
+  }
+
+  .timer-display {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .timer-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .fullscreen-btn {
+    width: 28px;
+    height: 28px;
+  }
 }
 
-/* ===== Responsive: ≤480px — compact tabs ===== */
+/* ===== Responsive: ≤480px — compact everything ===== */
 @media (max-width: 480px) {
   .root {
-    padding: 1rem 0.75rem;
+    padding: 0.75rem 0.5rem;
   }
 
   .tabs {
@@ -844,11 +916,12 @@ pre .astro-code {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     flex-wrap: nowrap;
+    padding: 3px;
   }
 
   .tab-btn {
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 5px 8px;
+    font-size: 11px;
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -858,7 +931,57 @@ pre .astro-code {
   }
 
   .plan-time {
-    font-size: 22px;
+    font-size: 20px;
+  }
+
+  .header-left h1 {
+    font-size: 16px;
+  }
+
+  pre code,
+  pre .astro-code {
+    font-size: 10.5px;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+
+  .pattern-card {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .question-card-header {
+    padding: 8px 12px;
+  }
+
+  .question-card-header .q-name {
+    font-size: 12.5px;
+  }
+
+  .strategy-card {
+    padding: 0.75rem;
+  }
+
+  .strategy-card h3 {
+    font-size: 12.5px;
+  }
+
+  .strategy-card ol,
+  .strategy-card ul {
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+
+  .strategy-card .highlight-text {
+    font-size: 11.5px;
+    padding: 6px 10px;
+  }
+
+  .breadcrumb {
+    margin-bottom: 0.5rem;
+  }
+
+  .back-link {
+    font-size: 11px;
   }
 }
 

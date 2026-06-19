@@ -8,7 +8,7 @@ const sharedRoutes: StoryRoute[] = [
   { prompt: 'Tell me about taking ownership', storyTitle: 'OTP Deployment Handoff', oneLiner: 'Found 5 runbook errors, validated security-sensitive deployment, prevented customer-visible ENC(...) text' },
   { prompt: 'Tell me about navigating ambiguity', storyTitle: 'CPNI + Undocumented EKS Migration', oneLiner: 'Discovered services migrated without docs, found correct config, created EKS guide for team' },
   { prompt: 'Tell me about a technical disagreement', storyTitle: 'Null Preservation vs Filtering', oneLiner: 'Chose harder approach (preserve nulls) because filtering = silent data loss in downstream' },
-  { prompt: 'Tell me about going above and beyond', storyTitle: 'Stability Backlog + Doc Rebuild', oneLiner: '14 architectural risks identified, 6 service docs rebuilt, 5+ errors in team understanding corrected' },
+  { prompt: 'Tell me about going above and beyond', storyTitle: 'Design Pivot — Pattern Matching → ID Lookup', oneLiner: 'Scrapped approved pattern-matching plan mid-implementation, proposed fundamentally better ID-based DB approach — added 1 day re-planning, saved months of maintenance' },
   { prompt: 'Tell me about handling scope changes', storyTitle: 'Error Categorization ID Scheme', oneLiner: 'BI changed IDs 3 times (58→57→74), remapped all, caught 10 rules they missed' },
   { prompt: 'Tell me about compliance-sensitive work', storyTitle: 'CPNI Federal Compliance', oneLiner: 'Telecom Act 1996 violation — analyzed 5+ repos, zero code needed, found 3 pre-existing bugs' },
 ];
